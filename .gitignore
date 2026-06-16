@@ -1,3 +1,19 @@
 .idea
+*.iml
 
 *template.md
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+# Java
+*.class
+*.jar
+
+# OS
+.DS_Store
+Thumbs.db

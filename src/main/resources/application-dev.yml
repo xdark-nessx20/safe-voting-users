@@ -1,0 +1,26 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/safevoting_users
+    username: safevoting
+    password: safevoting_dev
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5432/safevoting_users
+    user: safevoting
+    password: safevoting_dev
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+logging:
+  level:
+    com.safevoting.users: DEBUG
+    org.springframework.r2dbc: DEBUG

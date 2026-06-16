@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: users
+  profiles:
+    active: dev
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/safevoting_users
+    username: safevoting
+    password: safevoting_dev
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+  webflux:
+    base-path: /api/v1
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+jwt:
+  secret: c2FmZXZvdGluZy1qd3Qtc2VjcmV0LWtleS0yMDI2LWJhc2U2NC1lbmNvZGVkLXN0cmluZw==
+  expiration-minutes: 15
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.safevoting.users: DEBUG
