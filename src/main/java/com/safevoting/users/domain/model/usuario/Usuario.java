@@ -57,6 +57,10 @@ public class Usuario {
         return this.estado == EstadoUsuario.INACTIVO;
     }
 
+    public boolean esGestor() {
+        return this.rol == Rol.GESTOR_ELECTORAL;
+    }
+
     public void habilitar() {
         if (!esActivo()) {
             throw new DatosInvalidosException("Solo se puede habilitar un usuario en estado ACTIVO");
@@ -90,10 +94,9 @@ public class Usuario {
         validateMunicipio();
     }
 
-    public void setTelefono(Phone newPhone){
+    public void setTelefono(Phone newPhone) {
         newPhone.validateInfo();
         this.telefono = newPhone;
-
     }
 
     private void validateNombre() {

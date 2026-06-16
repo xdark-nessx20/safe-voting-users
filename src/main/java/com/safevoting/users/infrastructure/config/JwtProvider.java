@@ -1,6 +1,5 @@
 package com.safevoting.users.infrastructure.config;
 
-import com.safevoting.users.domain.repository.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,7 +12,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Component
-public class JwtProvider implements TokenService {
+public class JwtProvider implements com.safevoting.users.domain.repository.TokenService {
 
     private final SecretKey secretKey;
     private final long expirationMinutes;
@@ -49,5 +48,9 @@ public class JwtProvider implements TokenService {
 
     public String extraerEmail(String token) {
         return validarToken(token).getSubject();
+    }
+
+    public String extraerRol(String token) {
+        return validarToken(token).get("rol", String.class);
     }
 }
