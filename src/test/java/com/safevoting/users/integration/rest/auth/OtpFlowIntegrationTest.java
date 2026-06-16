@@ -4,9 +4,10 @@ import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.AuthController;
-import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.AuthResponse;
+import com.safevoting.users.application.auth.AuthResult;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper.AuthDtoMapper;
 import com.safevoting.users.infrastructure.adapter.in.rest.common.GlobalExceptionHandler;
+import com.safevoting.users.infrastructure.config.BeanConfiguration;
 import com.safevoting.users.infrastructure.config.JwtFilter;
 import com.safevoting.users.infrastructure.config.JwtProvider;
 import com.safevoting.users.infrastructure.config.SecurityConfig;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.when;
                 ReactiveUserDetailsServiceAutoConfiguration.class
         }
 )
-@Import({GlobalExceptionHandler.class})
+@Import({GlobalExceptionHandler.class, BeanConfiguration.class})
 class OtpFlowIntegrationTest {
 
     @Autowired
@@ -75,12 +76,12 @@ class OtpFlowIntegrationTest {
         var requestBody = "{\"email\": \"juan@example.com\"}";
         var verifyBody = "{\"email\": \"juan@example.com\", \"codigo\": \"123456\"}";
 
-        when(requestOtpUseCase.solicitarOtp("juan@example.com"))
+        when(requestOtpUseCase.ejecutar("juan@example.com"))
                 .thenReturn(Mono.just("Si el email está registrado, recibirás un código."));
-        when(verifyOtpUseCase.verificarOtp("juan@example.com", "123456"))
-                .thenReturn(Mono.just(new AuthResponse("mock-token", "juan@example.com", "VOTANTE")));
+        when(verifyOtpUseCase.ejecutar("juan@example.com", "123456"))
+                .thenReturn(Mono.just(new AuthResult("mock-token", "juan@example.com", "VOTANTE")));
 
-        webClient.post().uri("/api/v1/auth/otp/request")
+        webClient.post().uri("/api/v1/auth/login/request-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .exchange()
@@ -88,7 +89,7 @@ class OtpFlowIntegrationTest {
                 .expectBody()
                 .jsonPath("$.mensaje").isEqualTo("Si el email está registrado, recibirás un código.");
 
-        webClient.post().uri("/api/v1/auth/otp/verify")
+        webClient.post().uri("/api/v1/auth/login/verify-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(verifyBody)
                 .exchange()
@@ -101,10 +102,10 @@ class OtpFlowIntegrationTest {
     void deberiaRetornarMensajeGenericoParaEmailNoRegistradoAlSolicitarOtp() {
         var body = "{\"email\": \"noexiste@example.com\"}";
 
-        when(requestOtpUseCase.solicitarOtp("noexiste@example.com"))
+        when(requestOtpUseCase.ejecutar("noexiste@example.com"))
                 .thenReturn(Mono.just("Si el email está registrado, recibirás un código."));
 
-        webClient.post().uri("/api/v1/auth/otp/request")
+        webClient.post().uri("/api/v1/auth/login/request-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()

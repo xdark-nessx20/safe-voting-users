@@ -11,4 +11,6 @@ public interface MunicipioRepository {
     Mono<Municipio> findById(UUID id);
 
     Flux<Municipio> findAll();
+
+    Flux<Municipio> findByDepartmentId(UUID departamentoId);
 }

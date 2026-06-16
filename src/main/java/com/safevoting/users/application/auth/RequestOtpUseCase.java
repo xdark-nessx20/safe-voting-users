@@ -1,8 +1,11 @@
 package com.safevoting.users.application.auth;
 
+import com.safevoting.users.domain.exception.usuario.EmailNoRegistradoException;
+import com.safevoting.users.domain.exception.usuario.UsuarioInactivoException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
+import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.repository.EmailSender;
 import com.safevoting.users.domain.repository.OtpRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
@@ -11,11 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
 
-@Service
 @RequiredArgsConstructor
 public class RequestOtpUseCase {
 
@@ -23,17 +23,14 @@ public class RequestOtpUseCase {
     private final OtpRepository otpRepository;
     private final EmailSender emailSender;
 
-    public Mono<String> solicitarOtp(String emailStr) {
+    public Mono<String> ejecutar(String emailStr) {
         Email email = Email.builder().valor(emailStr).build();
 
         return usuarioRepository.findByEmail(email)
-                .flatMap(usuario -> {
-                    if (usuario.getEstado() == EstadoUsuario.INACTIVO) {
-                        return Mono.just("Si el email está registrado, recibirás un código.");
-                    }
-                    return generarYEnviarOtp(email);
-                })
-                .switchIfEmpty(Mono.just("Si el email está registrado, recibirás un código."));
+                .switchIfEmpty(Mono.error(new EmailNoRegistradoException(emailStr)))
+                .filter(Usuario::esHabilitado)
+                .switchIfEmpty(Mono.error(new UsuarioInactivoException()))
+                .flatMap(usuario -> generarYEnviarOtp(email));
     }
 
     private Mono<String> generarYEnviarOtp(Email email) {
@@ -43,22 +40,22 @@ public class RequestOtpUseCase {
                     return otpRepository.update(otpActivo);
                 })
                 .then(Mono.defer(() -> {
-                    String codigo = generarCodigoAleatorio();
-                    Otp nuevoOtp = Otp.builder()
-                            .email(email)
-                            .codigo(codigo)
-                            .expiracion(Instant.now().plus(Otp.TIEMPO_EXPIRACION_MINUTOS, ChronoUnit.MINUTES))
-                            .intentos(0)
-                            .estado(EstadoOtp.ACTIVO)
-                            .build();
+                    Otp nuevoOtp = buildOtp(email);
                     return otpRepository.save(nuevoOtp)
-                            .flatMap(otp -> emailSender.enviarOtp(email, codigo)
+                            .flatMap(otp -> emailSender.enviarOtp(email, otp.getCodigo())
                                     .thenReturn("Si el email está registrado, recibirás un código."));
                 }));
     }
 
     private String generarCodigoAleatorio() {
-        int numero = ThreadLocalRandom.current().nextInt(100000, 999999);
-        return String.valueOf(numero);
+        return UUID.randomUUID().toString().toUpperCase().substring(0, 6);
+    }
+
+    private Otp buildOtp(Email votanteEmail) {
+        String codigo = generarCodigoAleatorio();
+        return Otp.builder()
+                .email(votanteEmail)
+                .codigo(codigo)
+                .build();
     }
 }

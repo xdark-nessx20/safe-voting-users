@@ -1,5 +1,6 @@
 package com.safevoting.users.infrastructure.config;
 
+import com.safevoting.users.domain.repository.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -12,7 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Component
-public class JwtProvider {
+public class JwtProvider implements TokenService {
 
     private final SecretKey secretKey;
     private final long expirationMinutes;
@@ -24,6 +25,7 @@ public class JwtProvider {
         this.expirationMinutes = expirationMinutes;
     }
 
+    @Override
     public String generarToken(String email, String rol) {
         Date ahora = new Date();
         Date expiracion = new Date(ahora.getTime() + expirationMinutes * 60 * 1000);

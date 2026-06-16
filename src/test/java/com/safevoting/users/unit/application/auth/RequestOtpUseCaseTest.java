@@ -1,6 +1,8 @@
 package com.safevoting.users.unit.application.auth;
 
 import com.safevoting.users.application.auth.RequestOtpUseCase;
+import com.safevoting.users.domain.exception.usuario.EmailNoRegistradoException;
+import com.safevoting.users.domain.exception.usuario.UsuarioInactivoException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
@@ -68,7 +70,7 @@ class RequestOtpUseCaseTest {
         when(otpRepository.save(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(emailSender.enviarOtp(any(Email.class), any(String.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.solicitarOtp(emailStr))
+        StepVerifier.create(useCase.ejecutar(emailStr))
                 .assertNext(mensaje -> {
                     assert mensaje.contains("recibirás un código");
                 })
@@ -76,18 +78,16 @@ class RequestOtpUseCaseTest {
     }
 
     @Test
-    void deberiaRetornarMensajeGenericoCuandoEmailNoExiste() {
+    void deberiaLanzarEmailNoRegistradoExceptionCuandoEmailNoExiste() {
         when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.solicitarOtp(emailStr))
-                .assertNext(mensaje -> {
-                    assert mensaje.contains("recibirás un código");
-                })
-                .verifyComplete();
+        StepVerifier.create(useCase.ejecutar(emailStr))
+                .expectError(EmailNoRegistradoException.class)
+                .verify();
     }
 
     @Test
-    void deberiaRetornarMensajeGenericoCuandoUsuarioEstaInactivo() {
+    void deberiaLanzarUsuarioInactivoExceptionCuandoUsuarioEstaInactivo() {
         Usuario usuario = Usuario.builder()
                 .id(UUID.randomUUID())
                 .nombre("Juan")
@@ -101,11 +101,9 @@ class RequestOtpUseCaseTest {
 
         when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(usuario));
 
-        StepVerifier.create(useCase.solicitarOtp(emailStr))
-                .assertNext(mensaje -> {
-                    assert mensaje.contains("recibirás un código");
-                })
-                .verifyComplete();
+        StepVerifier.create(useCase.ejecutar(emailStr))
+                .expectError(UsuarioInactivoException.class)
+                .verify();
     }
 
     @Test
@@ -135,7 +133,7 @@ class RequestOtpUseCaseTest {
         when(otpRepository.save(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(emailSender.enviarOtp(any(Email.class), any(String.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.solicitarOtp(emailStr))
+        StepVerifier.create(useCase.ejecutar(emailStr))
                 .assertNext(mensaje -> {
                     assert mensaje.contains("recibirás un código");
                 })

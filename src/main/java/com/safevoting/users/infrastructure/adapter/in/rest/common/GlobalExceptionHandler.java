@@ -76,6 +76,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 
+    @ExceptionHandler(UsuarioInactivoException.class)
+    public ResponseEntity<ApiErrorResponse> handleUsuarioInactivo(UsuarioInactivoException ex) {
+        var body = new ApiErrorResponse(403, "Prohibido", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
     @ExceptionHandler(RolInvalidoException.class)
     public ResponseEntity<ApiErrorResponse> handleRolInvalido(RolInvalidoException ex) {
         var body = new ApiErrorResponse(403, "Prohibido", ex.getMessage(), ex.getErrorCode());

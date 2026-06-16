@@ -59,7 +59,7 @@ class RegisterVotanteUseCaseTest {
     }
 
     @Test
-    void deberiaRegistrarVotanteExitosamenteConEstadoActivo() {
+    void deberiaEjecutarVotanteExitosamenteConEstadoActivo() {
         Usuario usuarioBase = crearUsuarioBase();
 
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.empty());
@@ -80,7 +80,7 @@ class RegisterVotanteUseCaseTest {
                     .build());
         });
 
-        StepVerifier.create(useCase.registrar(usuarioBase))
+        StepVerifier.create(useCase.ejecutar(usuarioBase))
                 .assertNext(usuario -> {
                     assert usuario.getEstado() == EstadoUsuario.ACTIVO;
                     assert usuario.getRol() == Rol.VOTANTE;
@@ -106,7 +106,7 @@ class RegisterVotanteUseCaseTest {
         when(usuarioRepository.findByDocumento(documento)).thenReturn(Mono.empty());
         when(municipioRepository.findById(municipioId)).thenReturn(Mono.just(municipio));
 
-        StepVerifier.create(useCase.registrar(usuarioBase))
+        StepVerifier.create(useCase.ejecutar(usuarioBase))
                 .expectError(EmailDuplicadoException.class)
                 .verify();
     }
@@ -129,7 +129,7 @@ class RegisterVotanteUseCaseTest {
         when(usuarioRepository.findByDocumento(documento)).thenReturn(Mono.just(existente));
         when(municipioRepository.findById(municipioId)).thenReturn(Mono.just(municipio));
 
-        StepVerifier.create(useCase.registrar(usuarioBase))
+        StepVerifier.create(useCase.ejecutar(usuarioBase))
                 .expectError(DocumentoDuplicadoException.class)
                 .verify();
     }
@@ -142,7 +142,7 @@ class RegisterVotanteUseCaseTest {
         when(usuarioRepository.findByDocumento(documento)).thenReturn(Mono.empty());
         when(municipioRepository.findById(municipioId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.registrar(usuarioBase))
+        StepVerifier.create(useCase.ejecutar(usuarioBase))
                 .expectError(MunicipioNoEncontradoException.class)
                 .verify();
     }

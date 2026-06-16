@@ -1,5 +1,6 @@
 package com.safevoting.users.unit.application.auth;
 
+import com.safevoting.users.application.auth.AuthResult;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
 import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
 import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
@@ -13,10 +14,10 @@ import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.domain.model.usuario.Rol;
 import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.repository.OtpRepository;
+import com.safevoting.users.domain.repository.TokenService;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
-import com.safevoting.users.infrastructure.config.JwtProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,7 +43,7 @@ class VerifyOtpUseCaseTest {
     private OtpRepository otpRepository;
 
     @Mock
-    private JwtProvider jwtProvider;
+    private TokenService tokenService;
 
     @InjectMocks
     private VerifyOtpUseCase useCase;
@@ -81,13 +82,13 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.just(usuario));
-        when(jwtProvider.generarToken(emailStr, "VOTANTE")).thenReturn(tokenEsperado);
+        when(tokenService.generarToken(emailStr, "VOTANTE")).thenReturn(tokenEsperado);
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, codigoCorrecto))
-                .assertNext(response -> {
-                    assert response.token().equals(tokenEsperado);
-                    assert response.email().equals(emailStr);
-                    assert response.rol().equals("VOTANTE");
+        StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
+                .assertNext(result -> {
+                    assert result.token().equals(tokenEsperado);
+                    assert result.email().equals(emailStr);
+                    assert result.rol().equals("VOTANTE");
                 })
                 .verifyComplete();
     }
@@ -117,7 +118,7 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.just(usuario));
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, codigoCorrecto))
+        StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
                 .expectError(UsuarioNoHabilitadoException.class)
                 .verify();
     }
@@ -135,7 +136,7 @@ class VerifyOtpUseCaseTest {
 
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, codigoCorrecto))
+        StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
                 .expectError(OtpExpiradoException.class)
                 .verify();
     }
@@ -154,7 +155,7 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, "999999"))
+        StepVerifier.create(useCase.ejecutar(emailStr, "999999"))
                 .expectError(OtpInvalidoException.class)
                 .verify();
     }
@@ -173,7 +174,7 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, "999999"))
+        StepVerifier.create(useCase.ejecutar(emailStr, "999999"))
                 .expectError(ReintentosExcedidosException.class)
                 .verify();
     }
@@ -182,7 +183,7 @@ class VerifyOtpUseCaseTest {
     void deberiaLanzarOtpInvalidoCuandoNoExisteOtpActivo() {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, codigoCorrecto))
+        StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
                 .expectError(OtpInvalidoException.class)
                 .verify();
     }
@@ -212,11 +213,11 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.just(gestor));
-        when(jwtProvider.generarToken(emailStr, "GESTOR_ELECTORAL")).thenReturn(tokenEsperado);
+        when(tokenService.generarToken(emailStr, "GESTOR_ELECTORAL")).thenReturn(tokenEsperado);
 
-        StepVerifier.create(useCase.verificarOtp(emailStr, codigoCorrecto))
-                .assertNext(response -> {
-                    assert response.rol().equals("GESTOR_ELECTORAL");
+        StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
+                .assertNext(result -> {
+                    assert result.rol().equals("GESTOR_ELECTORAL");
                 })
                 .verifyComplete();
     }

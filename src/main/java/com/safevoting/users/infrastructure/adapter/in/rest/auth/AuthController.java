@@ -3,9 +3,6 @@ package com.safevoting.users.infrastructure.adapter.in.rest.auth;
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
-import com.safevoting.users.domain.model.geografia.Municipio;
-import com.safevoting.users.domain.model.usuario.EstadoUsuario;
-import com.safevoting.users.domain.model.usuario.Rol;
 import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.*;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper.AuthDtoMapper;
@@ -17,9 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-
-import java.time.Instant;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -34,34 +28,24 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "Registrar un nuevo votante")
-    public Mono<ResponseEntity<Map<String, String>>> registrar(@Valid @RequestBody RegisterRequest request) {
-        Usuario usuarioBase = authDtoMapper.toUsuario(request);
-        Usuario usuarioConMunicipio = Usuario.builder()
-                .nombre(usuarioBase.getNombre())
-                .email(usuarioBase.getEmail())
-                .telefono(usuarioBase.getTelefono())
-                .documento(usuarioBase.getDocumento())
-                .municipio(new Municipio(request.municipioId(), "", null))
-                .rol(Rol.VOTANTE)
-                .estado(EstadoUsuario.ACTIVO)
-                .createdAt(Instant.now())
-                .build();
-        return registerVotanteUseCase.registrar(usuarioConMunicipio)
+    public Mono<ResponseEntity<MessageResponse>> registrar(@Valid @RequestBody RegisterRequest request) {
+        Usuario usuario = authDtoMapper.toUsuarioParaRegistro(request);
+        return registerVotanteUseCase.ejecutar(usuario)
                 .map(u -> ResponseEntity.status(HttpStatus.CREATED)
-                        .body(Map.of("mensaje", "Usuario registrado exitosamente")));
+                        .body(new MessageResponse("Usuario registrado exitosamente")));
     }
 
-    @PostMapping("/otp/request")
+    @PostMapping("/login/request-otp")
     @Operation(summary = "Solicitar código OTP de autenticación")
-    public Mono<ResponseEntity<Map<String, String>>> solicitarOtp(@Valid @RequestBody OtpRequest request) {
-        return requestOtpUseCase.solicitarOtp(request.email())
-                .map(mensaje -> ResponseEntity.ok(Map.of("mensaje", mensaje)));
+    public Mono<ResponseEntity<MessageResponse>> solicitarOtp(@Valid @RequestBody OtpRequest request) {
+        return requestOtpUseCase.ejecutar(request.email())
+                .map(mensaje -> ResponseEntity.ok(new MessageResponse(mensaje)));
     }
 
-    @PostMapping("/otp/verify")
+    @PostMapping("/login/verify-otp")
     @Operation(summary = "Verificar código OTP y obtener token de sesión")
     public Mono<ResponseEntity<AuthResponse>> verificarOtp(@Valid @RequestBody OtpVerifyRequest request) {
-        return verifyOtpUseCase.verificarOtp(request.email(), request.codigo())
-                .map(ResponseEntity::ok);
+        return verifyOtpUseCase.ejecutar(request.email(), request.codigo())
+                .map(result -> ResponseEntity.ok(new AuthResponse(result.token(), result.email(), result.rol())));
     }
 }

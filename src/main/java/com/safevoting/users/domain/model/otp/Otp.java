@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Getter
@@ -30,7 +31,7 @@ public class Otp {
 
     @Builder.Default
     private Instant expiracion = Instant.now()
-            .plusSeconds(TIEMPO_EXPIRACION_MINUTOS * 60);
+            .plus(TIEMPO_EXPIRACION_MINUTOS, ChronoUnit.MINUTES);
 
     @Builder.Default
     private int intentos = 0;

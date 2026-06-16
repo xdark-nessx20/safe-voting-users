@@ -1,5 +1,6 @@
 package com.safevoting.users.integration.rest.auth;
 
+import com.safevoting.users.application.auth.AuthResult;
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
@@ -15,10 +16,10 @@ import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
 import com.safevoting.users.domain.shared.Phone;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.AuthController;
-import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.AuthResponse;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.RegisterRequest;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper.AuthDtoMapper;
 import com.safevoting.users.infrastructure.adapter.in.rest.common.GlobalExceptionHandler;
+import com.safevoting.users.infrastructure.config.BeanConfiguration;
 import com.safevoting.users.infrastructure.config.JwtFilter;
 import com.safevoting.users.infrastructure.config.JwtProvider;
 import com.safevoting.users.infrastructure.config.SecurityConfig;
@@ -49,7 +50,7 @@ import static org.mockito.Mockito.when;
                 ReactiveUserDetailsServiceAutoConfiguration.class
         }
 )
-@Import({GlobalExceptionHandler.class})
+@Import({GlobalExceptionHandler.class, BeanConfiguration.class})
 class AuthControllerIntegrationTest {
 
     @Autowired
@@ -94,7 +95,7 @@ class AuthControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        when(authDtoMapper.toUsuario(any(RegisterRequest.class))).thenReturn(usuarioMapeado);
+        when(authDtoMapper.toUsuarioParaRegistro(any(RegisterRequest.class))).thenReturn(usuarioMapeado);
         when(jwtFilter.filter(any(ServerWebExchange.class), any(WebFilterChain.class)))
                 .thenAnswer(inv -> {
                     WebFilterChain chain = inv.getArgument(1);
@@ -114,7 +115,7 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(registerVotanteUseCase.registrar(any(Usuario.class)))
+        when(registerVotanteUseCase.ejecutar(any(Usuario.class)))
                 .thenReturn(Mono.just(Usuario.builder()
                         .id(UUID.randomUUID())
                         .nombre("Juan Pérez")
@@ -147,7 +148,7 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(registerVotanteUseCase.registrar(any(Usuario.class)))
+        when(registerVotanteUseCase.ejecutar(any(Usuario.class)))
                 .thenReturn(Mono.error(new EmailDuplicadoException("juan@example.com")));
 
         webClient.post().uri("/api/v1/auth/register")
@@ -171,7 +172,7 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(registerVotanteUseCase.registrar(any(Usuario.class)))
+        when(registerVotanteUseCase.ejecutar(any(Usuario.class)))
                 .thenReturn(Mono.error(new DocumentoDuplicadoException("123456789")));
 
         webClient.post().uri("/api/v1/auth/register")
@@ -195,7 +196,7 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(registerVotanteUseCase.registrar(any(Usuario.class)))
+        when(registerVotanteUseCase.ejecutar(any(Usuario.class)))
                 .thenReturn(Mono.error(new MunicipioNoEncontradoException("b1c2d3e4-9999-4000-8000-000000000099")));
 
         webClient.post().uri("/api/v1/auth/register")
@@ -235,10 +236,10 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(requestOtpUseCase.solicitarOtp("juan@example.com"))
+        when(requestOtpUseCase.ejecutar("juan@example.com"))
                 .thenReturn(Mono.just("Si el email está registrado, recibirás un código."));
 
-        webClient.post().uri("/api/v1/auth/otp/request")
+        webClient.post().uri("/api/v1/auth/login/request-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()
@@ -256,10 +257,10 @@ class AuthControllerIntegrationTest {
                 }
                 """;
 
-        when(verifyOtpUseCase.verificarOtp("juan@example.com", "123456"))
-                .thenReturn(Mono.just(new AuthResponse("mock-token", "juan@example.com", "VOTANTE")));
+        when(verifyOtpUseCase.ejecutar("juan@example.com", "123456"))
+                .thenReturn(Mono.just(new AuthResult("mock-token", "juan@example.com", "VOTANTE")));
 
-        webClient.post().uri("/api/v1/auth/otp/verify")
+        webClient.post().uri("/api/v1/auth/login/verify-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()
