@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: safevoting_postgres
+    environment:
+      POSTGRES_DB: safevoting_users
+      POSTGRES_USER: safevoting
+      POSTGRES_PASSWORD: safevoting_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: safevoting_mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  pgdata:
