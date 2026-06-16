@@ -8,6 +8,8 @@ import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
+import com.safevoting.users.domain.shared.Phone;
+import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -16,13 +18,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Repository
+@RequiredArgsConstructor
 public class UsuarioR2dbcRepository implements UsuarioRepository {
 
     private final DatabaseClient databaseClient;
-
-    public UsuarioR2dbcRepository(DatabaseClient databaseClient) {
-        this.databaseClient = databaseClient;
-    }
 
     @Override
     public Mono<Usuario> findByEmail(Email email) {
@@ -70,7 +69,7 @@ public class UsuarioR2dbcRepository implements UsuarioRepository {
                 .bind("id", id)
                 .bind("nombre", usuario.getNombre())
                 .bind("email", usuario.getEmail().getValor())
-                .bind("telefono", usuario.getTelefono())
+                .bind("telefono", usuario.getTelefono() != null ? usuario.getTelefono().getValor() : null)
                 .bind("documento", usuario.getDocumento().getValor())
                 .bind("municipio_id", usuario.getMunicipio().getId())
                 .bind("rol", usuario.getRol().name())
@@ -100,11 +99,12 @@ public class UsuarioR2dbcRepository implements UsuarioRepository {
                 .nombre(row.get("m_nombre", String.class))
                 .departamento(depto)
                 .build();
+        String telefonoStr = row.get("telefono", String.class);
         return Usuario.builder()
                 .id(row.get("id", UUID.class))
                 .nombre(row.get("nombre", String.class))
                 .email(Email.builder().valor(row.get("email", String.class)).build())
-                .telefono(row.get("telefono", String.class))
+                .telefono(telefonoStr != null ? Phone.builder().valor(telefonoStr).build() : null)
                 .documento(DocumentoIdentidad.builder().valor(row.get("documento", String.class)).build())
                 .municipio(municipio)
                 .rol(Rol.valueOf(row.get("rol", String.class)))

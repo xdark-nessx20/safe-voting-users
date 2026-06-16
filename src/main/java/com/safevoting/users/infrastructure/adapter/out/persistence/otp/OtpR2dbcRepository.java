@@ -4,6 +4,7 @@ import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
 import com.safevoting.users.domain.repository.OtpRepository;
 import com.safevoting.users.domain.shared.Email;
+import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -12,13 +13,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Repository
+@RequiredArgsConstructor
 public class OtpR2dbcRepository implements OtpRepository {
 
     private final DatabaseClient databaseClient;
-
-    public OtpR2dbcRepository(DatabaseClient databaseClient) {
-        this.databaseClient = databaseClient;
-    }
 
     @Override
     public Mono<Otp> save(Otp otp) {

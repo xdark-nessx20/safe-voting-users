@@ -12,6 +12,7 @@ import com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper.AuthDtoMa
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,22 +24,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Autenticación")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final RegisterVotanteUseCase registerVotanteUseCase;
     private final RequestOtpUseCase requestOtpUseCase;
     private final VerifyOtpUseCase verifyOtpUseCase;
     private final AuthDtoMapper authDtoMapper;
-
-    public AuthController(RegisterVotanteUseCase registerVotanteUseCase,
-                          RequestOtpUseCase requestOtpUseCase,
-                          VerifyOtpUseCase verifyOtpUseCase,
-                          AuthDtoMapper authDtoMapper) {
-        this.registerVotanteUseCase = registerVotanteUseCase;
-        this.requestOtpUseCase = requestOtpUseCase;
-        this.verifyOtpUseCase = verifyOtpUseCase;
-        this.authDtoMapper = authDtoMapper;
-    }
 
     @PostMapping("/register")
     @Operation(summary = "Registrar un nuevo votante")

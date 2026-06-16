@@ -1,10 +1,10 @@
 package com.safevoting.users.unit.application.auth;
 
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
-import com.safevoting.users.domain.model.exception.otp.OtpExpiradoException;
-import com.safevoting.users.domain.model.exception.otp.OtpInvalidoException;
-import com.safevoting.users.domain.model.exception.otp.ReintentosExcedidosException;
-import com.safevoting.users.domain.model.exception.usuario.UsuarioNoHabilitadoException;
+import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
+import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
+import com.safevoting.users.domain.exception.otp.ReintentosExcedidosException;
+import com.safevoting.users.domain.exception.usuario.UsuarioNoHabilitadoException;
 import com.safevoting.users.domain.model.geografia.Departamento;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.model.otp.EstadoOtp;

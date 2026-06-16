@@ -3,6 +3,7 @@ package com.safevoting.users.infrastructure.adapter.out.persistence.geografia;
 import com.safevoting.users.domain.model.geografia.Departamento;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.repository.MunicipioRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -11,13 +12,10 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @Repository
+@RequiredArgsConstructor
 public class MunicipioR2dbcRepository implements MunicipioRepository {
 
     private final DatabaseClient databaseClient;
-
-    public MunicipioR2dbcRepository(DatabaseClient databaseClient) {
-        this.databaseClient = databaseClient;
-    }
 
     @Override
     public Mono<Municipio> findById(UUID id) {

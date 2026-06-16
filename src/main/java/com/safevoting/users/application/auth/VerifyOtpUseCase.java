@@ -1,9 +1,9 @@
 package com.safevoting.users.application.auth;
 
-import com.safevoting.users.domain.model.exception.otp.OtpExpiradoException;
-import com.safevoting.users.domain.model.exception.otp.OtpInvalidoException;
-import com.safevoting.users.domain.model.exception.otp.ReintentosExcedidosException;
-import com.safevoting.users.domain.model.exception.usuario.UsuarioNoHabilitadoException;
+import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
+import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
+import com.safevoting.users.domain.exception.otp.ReintentosExcedidosException;
+import com.safevoting.users.domain.exception.usuario.UsuarioNoHabilitadoException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.domain.repository.OtpRepository;
@@ -11,23 +11,17 @@ import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.domain.shared.Email;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.AuthResponse;
 import com.safevoting.users.infrastructure.config.JwtProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class VerifyOtpUseCase {
 
     private final UsuarioRepository usuarioRepository;
     private final OtpRepository otpRepository;
     private final JwtProvider jwtProvider;
-
-    public VerifyOtpUseCase(UsuarioRepository usuarioRepository,
-                            OtpRepository otpRepository,
-                            JwtProvider jwtProvider) {
-        this.usuarioRepository = usuarioRepository;
-        this.otpRepository = otpRepository;
-        this.jwtProvider = jwtProvider;
-    }
 
     public Mono<AuthResponse> verificarOtp(String emailStr, String codigo) {
         Email email = Email.builder().valor(emailStr).build();

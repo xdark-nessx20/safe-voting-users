@@ -1,12 +1,14 @@
-package com.safevoting.users.domain.model.exception.geografia;
+package com.safevoting.users.domain.exception.geografia;
 
-import com.safevoting.users.domain.model.exception.comun.DomainException;
-
-public class MunicipioNoEncontradoException extends DomainException {
+public class MunicipioNoEncontradoException extends RuntimeException {
 
     private static final String ERROR_CODE = "MUNICIPIO_NO_ENCONTRADO";
 
     public MunicipioNoEncontradoException(String id) {
-        super("El municipio con id '" + id + "' no existe", ERROR_CODE);
+        super("El municipio con id '" + id + "' no existe");
+    }
+
+    public String getErrorCode() {
+        return ERROR_CODE;
     }
 }

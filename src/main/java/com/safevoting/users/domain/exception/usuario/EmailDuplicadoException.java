@@ -1,12 +1,14 @@
-package com.safevoting.users.domain.model.exception.usuario;
+package com.safevoting.users.domain.exception.usuario;
 
-import com.safevoting.users.domain.model.exception.comun.DomainException;
-
-public class EmailDuplicadoException extends DomainException {
+public class EmailDuplicadoException extends RuntimeException {
 
     private static final String ERROR_CODE = "EMAIL_DUPLICADO";
 
     public EmailDuplicadoException(String email) {
-        super("El email '" + email + "' ya está registrado", ERROR_CODE);
+        super("El email '" + email + "' ya está registrado");
+    }
+
+    public String getErrorCode() {
+        return ERROR_CODE;
     }
 }

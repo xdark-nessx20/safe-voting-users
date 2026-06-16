@@ -1,6 +1,7 @@
 package com.safevoting.users.unit.domain.model.otp;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import com.safevoting.users.domain.exception.otp.TransicionEstadoOtpInvalidaException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
 import com.safevoting.users.domain.shared.Email;
@@ -21,6 +22,21 @@ class OtpTest {
         Otp otp = Otp.builder()
                 .id(UUID.randomUUID())
                 .email(email)
+                .codigo("ABC123")
+                .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .intentos(0)
+                .estado(EstadoOtp.ACTIVO)
+                .build();
+
+        assertDoesNotThrow(otp::validateInfo);
+        assertEquals("ABC123", otp.getCodigo());
+        assertEquals(EstadoOtp.ACTIVO, otp.getEstado());
+    }
+
+    @Test
+    void deberiaConstruirOtpValidoConCodigoNumerico() {
+        Otp otp = Otp.builder()
+                .email(email)
                 .codigo("123456")
                 .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
                 .intentos(0)
@@ -28,32 +44,35 @@ class OtpTest {
                 .build();
 
         assertDoesNotThrow(otp::validateInfo);
-        assertEquals("123456", otp.getCodigo());
-        assertEquals(EstadoOtp.ACTIVO, otp.getEstado());
+        assertTrue(otp.esActivo());
+        assertFalse(otp.esUsado());
+        assertFalse(otp.esInvalidado());
     }
 
     @Test
-    void deberiaLanzarExcepcionCuandoCodigoNoTieneSeisDigitos() {
-        assertThrows(DatosInvalidosException.class, () ->
-                Otp.builder()
-                        .email(email)
-                        .codigo("12345")
-                        .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
-                        .intentos(0)
-                        .estado(EstadoOtp.ACTIVO)
-                        .build());
+    void deberiaLanzarExcepcionCuandoCodigoNoTieneSeisCaracteres() {
+        Otp otp = Otp.builder()
+                .email(email)
+                .codigo("12345")
+                .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .intentos(0)
+                .estado(EstadoOtp.ACTIVO)
+                .build();
+
+        assertThrows(DatosInvalidosException.class, otp::validateInfo);
     }
 
     @Test
-    void deberiaLanzarExcepcionCuandoCodigoNoEsNumerico() {
-        assertThrows(DatosInvalidosException.class, () ->
-                Otp.builder()
-                        .email(email)
-                        .codigo("abc123")
-                        .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
-                        .intentos(0)
-                        .estado(EstadoOtp.ACTIVO)
-                        .build());
+    void deberiaLanzarExcepcionCuandoCodigoTieneMinusculas() {
+        Otp otp = Otp.builder()
+                .email(email)
+                .codigo("abc123")
+                .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .intentos(0)
+                .estado(EstadoOtp.ACTIVO)
+                .build();
+
+        assertThrows(DatosInvalidosException.class, otp::validateInfo);
     }
 
     @Test
@@ -68,14 +87,14 @@ class OtpTest {
 
         otp.incrementarIntento();
         assertEquals(1, otp.getIntentos());
-        assertEquals(EstadoOtp.ACTIVO, otp.getEstado());
+        assertTrue(otp.esActivo());
 
         otp.incrementarIntento();
         assertEquals(2, otp.getIntentos());
 
         otp.incrementarIntento();
         assertEquals(3, otp.getIntentos());
-        assertEquals(EstadoOtp.INVALIDADO, otp.getEstado());
+        assertTrue(otp.esInvalidado());
     }
 
     @Test
@@ -105,7 +124,7 @@ class OtpTest {
     }
 
     @Test
-    void deberiaMarcarOtpComoUsado() {
+    void deberiaMarcarOtpComoUsadoCuandoEstadoEsActivo() {
         Otp otp = Otp.builder()
                 .email(email)
                 .codigo("123456")
@@ -115,11 +134,24 @@ class OtpTest {
                 .build();
 
         otp.marcarUsado();
-        assertEquals(EstadoOtp.USADO, otp.getEstado());
+        assertTrue(otp.esUsado());
     }
 
     @Test
-    void deberiaInvalidarOtpExplicitamente() {
+    void deberiaLanzarExcepcionCuandoMarcarUsadoEnEstadoNoActivo() {
+        Otp otp = Otp.builder()
+                .email(email)
+                .codigo("123456")
+                .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .intentos(0)
+                .estado(EstadoOtp.USADO)
+                .build();
+
+        assertThrows(TransicionEstadoOtpInvalidaException.class, otp::marcarUsado);
+    }
+
+    @Test
+    void deberiaInvalidarOtpCuandoEstadoEsActivo() {
         Otp otp = Otp.builder()
                 .email(email)
                 .codigo("123456")
@@ -129,11 +161,24 @@ class OtpTest {
                 .build();
 
         otp.invalidar();
-        assertEquals(EstadoOtp.INVALIDADO, otp.getEstado());
+        assertTrue(otp.esInvalidado());
     }
 
     @Test
-    void deberiaRetornarFalseCuandoOtpNoEstaActivo() {
+    void deberiaLanzarExcepcionCuandoInvalidarEnEstadoNoActivo() {
+        Otp otp = Otp.builder()
+                .email(email)
+                .codigo("123456")
+                .expiracion(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .intentos(0)
+                .estado(EstadoOtp.INVALIDADO)
+                .build();
+
+        assertThrows(TransicionEstadoOtpInvalidaException.class, otp::invalidar);
+    }
+
+    @Test
+    void deberiaRetornarFalseCuandoOtpNoEstaActivoEnEsValido() {
         Otp otp = Otp.builder()
                 .email(email)
                 .codigo("123456")

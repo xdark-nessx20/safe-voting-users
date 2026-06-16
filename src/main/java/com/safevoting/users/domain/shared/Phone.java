@@ -9,21 +9,24 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Email {
+public class Phone {
 
-    private static final String PATTERN = "^[^@]+@[^@]+\\.[^@]+$";
+    private static final String PATTERN = "\\d{7,15}";
 
     private String valor;
 
     @Builder
-    public Email(String valor) {
+    public Phone(String valor) {
         this.valor = valor;
         validateInfo();
     }
 
     public void validateInfo() {
-        if (valor == null || !valor.matches(PATTERN)) {
-            throw new DatosInvalidosException("El formato del email no es válido");
+        if (valor == null || valor.isBlank()) {
+            return;
+        }
+        if (!valor.matches(PATTERN)) {
+            throw new DatosInvalidosException("El teléfono debe contener solo dígitos y tener entre 7 y 15 caracteres");
         }
     }
 }

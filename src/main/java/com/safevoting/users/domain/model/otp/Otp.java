@@ -1,64 +1,64 @@
 package com.safevoting.users.domain.model.otp;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import com.safevoting.users.domain.exception.otp.TransicionEstadoOtpInvalidaException;
 import com.safevoting.users.domain.shared.Email;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class Otp {
 
     public static final int CODIGO_LONGITUD = 6;
     public static final int MAXIMO_INTENTOS = 3;
     public static final int TIEMPO_EXPIRACION_MINUTOS = 5;
+    private static final String PATRON_CODIGO = "[A-Z0-9]{" + CODIGO_LONGITUD + "}";
 
     private UUID id;
     private Email email;
     private String codigo;
-    private Instant expiracion;
-    private int intentos;
-    private EstadoOtp estado;
 
-    public Otp(UUID id, Email email, String codigo, Instant expiracion, int intentos, EstadoOtp estado) {
-        this.id = id;
-        this.email = email;
-        this.codigo = codigo;
-        this.expiracion = expiracion;
-        this.intentos = intentos;
-        this.estado = estado;
-    }
+    @Builder.Default
+    private Instant expiracion = Instant.now()
+            .plusSeconds(TIEMPO_EXPIRACION_MINUTOS * 60);
 
-    public static class OtpBuilder {
-        public Otp build() {
-            Otp o = new Otp(id, email, codigo, expiracion, intentos, estado);
-            o.validateInfo();
-            return o;
-        }
-    }
+    @Builder.Default
+    private int intentos = 0;
+
+    @Builder.Default
+    private EstadoOtp estado = EstadoOtp.ACTIVO;
 
     public void validateInfo() {
-        if (email == null) {
-            throw new DatosInvalidosException("El email del OTP no puede ser nulo");
-        }
         email.validateInfo();
-        if (codigo == null || codigo.length() != CODIGO_LONGITUD) {
-            throw new DatosInvalidosException("El código OTP debe tener " + CODIGO_LONGITUD + " caracteres");
-        }
-        if (!codigo.matches("\\d+")) {
-            throw new DatosInvalidosException("El código OTP debe ser numérico");
+        if (codigo == null || !codigo.matches(PATRON_CODIGO)) {
+            throw new DatosInvalidosException("El código OTP debe tener " + CODIGO_LONGITUD
+                    + " caracteres alfanuméricos en mayúsculas");
         }
         if (expiracion == null) {
             throw new DatosInvalidosException("La expiración del OTP no puede ser nula");
         }
-        if (estado == null) {
-            throw new DatosInvalidosException("El estado del OTP no puede ser nulo");
-        }
+    }
+
+    public boolean esActivo() {
+        return this.estado == EstadoOtp.ACTIVO;
+    }
+
+    public boolean esUsado() {
+        return this.estado == EstadoOtp.USADO;
+    }
+
+    public boolean esInvalidado() {
+        return this.estado == EstadoOtp.INVALIDADO;
     }
 
     public void incrementarIntento() {
@@ -69,14 +69,22 @@ public class Otp {
     }
 
     public void marcarUsado() {
+        if (!esValido()) {
+            throw new TransicionEstadoOtpInvalidaException(
+                    "No se puede marcar como usado un OTP en estado " + this.estado);
+        }
         this.estado = EstadoOtp.USADO;
     }
 
     public void invalidar() {
+        if (!esActivo()) {
+            throw new TransicionEstadoOtpInvalidaException(
+                    "No se puede invalidar un OTP en estado " + this.estado);
+        }
         this.estado = EstadoOtp.INVALIDADO;
     }
 
     public boolean esValido() {
-        return this.estado == EstadoOtp.ACTIVO && Instant.now().isBefore(this.expiracion);
+        return esActivo() && Instant.now().isBefore(this.expiracion);
     }
 }

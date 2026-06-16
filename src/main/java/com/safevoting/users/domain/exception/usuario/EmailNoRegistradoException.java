@@ -1,12 +1,14 @@
-package com.safevoting.users.domain.model.exception.usuario;
+package com.safevoting.users.domain.exception.usuario;
 
-import com.safevoting.users.domain.model.exception.comun.DomainException;
-
-public class EmailNoRegistradoException extends DomainException {
+public class EmailNoRegistradoException extends RuntimeException {
 
     private static final String ERROR_CODE = "EMAIL_NO_REGISTRADO";
 
     public EmailNoRegistradoException(String email) {
-        super("El email '" + email + "' no está registrado", ERROR_CODE);
+        super("El email '" + email + "' no está registrado");
+    }
+
+    public String getErrorCode() {
+        return ERROR_CODE;
     }
 }

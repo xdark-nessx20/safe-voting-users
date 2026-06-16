@@ -1,14 +1,18 @@
 package com.safevoting.users.domain.model.geografia;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class Municipio {
 
@@ -16,26 +20,16 @@ public class Municipio {
     private String nombre;
     private Departamento departamento;
 
-    public Municipio(UUID id, String nombre, Departamento departamento) {
-        this.id = id;
-        this.nombre = nombre;
-        this.departamento = departamento;
-    }
-
-    public static class MunicipioBuilder {
-        public Municipio build() {
-            Municipio m = new Municipio(id, nombre, departamento);
-            m.validateInfo();
-            return m;
-        }
-    }
-
     public void validateInfo() {
-        if (nombre == null || nombre.isBlank()) {
+        if (nombreInvalido()) {
             throw new DatosInvalidosException("El nombre del municipio no puede estar vacío");
         }
         if (departamento == null) {
             throw new DatosInvalidosException("El departamento no puede ser nulo");
         }
+    }
+
+    private boolean nombreInvalido(){
+        return nombre == null || nombre.isBlank();
     }
 }

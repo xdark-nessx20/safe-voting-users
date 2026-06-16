@@ -1,6 +1,6 @@
 package com.safevoting.users.unit.domain.shared;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
 import com.safevoting.users.domain.shared.Email;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

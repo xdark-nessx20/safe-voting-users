@@ -3,6 +3,7 @@ package com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper;
 import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
+import com.safevoting.users.domain.shared.Phone;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.RegisterRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,5 +25,12 @@ public interface AuthDtoMapper {
 
     default DocumentoIdentidad mapDocumento(String valor) {
         return DocumentoIdentidad.builder().valor(valor).build();
+    }
+
+    default Phone mapTelefono(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        return Phone.builder().valor(valor).build();
     }
 }

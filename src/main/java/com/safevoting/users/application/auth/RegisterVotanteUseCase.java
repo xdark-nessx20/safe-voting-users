@@ -1,30 +1,25 @@
 package com.safevoting.users.application.auth;
 
-import com.safevoting.users.domain.model.exception.geografia.MunicipioNoEncontradoException;
-import com.safevoting.users.domain.model.exception.usuario.DocumentoDuplicadoException;
-import com.safevoting.users.domain.model.exception.usuario.EmailDuplicadoException;
+import com.safevoting.users.domain.exception.geografia.MunicipioNoEncontradoException;
+import com.safevoting.users.domain.exception.usuario.DocumentoDuplicadoException;
+import com.safevoting.users.domain.exception.usuario.EmailDuplicadoException;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.domain.model.usuario.Rol;
 import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.repository.MunicipioRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
-import com.safevoting.users.domain.shared.DocumentoIdentidad;
-import com.safevoting.users.domain.shared.Email;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
 @Service
+@RequiredArgsConstructor
 public class RegisterVotanteUseCase {
 
     private final UsuarioRepository usuarioRepository;
     private final MunicipioRepository municipioRepository;
-
-    public RegisterVotanteUseCase(UsuarioRepository usuarioRepository, MunicipioRepository municipioRepository) {
-        this.usuarioRepository = usuarioRepository;
-        this.municipioRepository = municipioRepository;
-    }
 
     public Mono<Usuario> registrar(Usuario usuario) {
         return usuarioRepository.findByEmail(usuario.getEmail())

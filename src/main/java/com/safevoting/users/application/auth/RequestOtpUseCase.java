@@ -7,6 +7,7 @@ import com.safevoting.users.domain.repository.EmailSender;
 import com.safevoting.users.domain.repository.OtpRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.domain.shared.Email;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -15,19 +16,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@RequiredArgsConstructor
 public class RequestOtpUseCase {
 
     private final UsuarioRepository usuarioRepository;
     private final OtpRepository otpRepository;
     private final EmailSender emailSender;
-
-    public RequestOtpUseCase(UsuarioRepository usuarioRepository,
-                             OtpRepository otpRepository,
-                             EmailSender emailSender) {
-        this.usuarioRepository = usuarioRepository;
-        this.otpRepository = otpRepository;
-        this.emailSender = emailSender;
-    }
 
     public Mono<String> solicitarOtp(String emailStr) {
         Email email = Email.builder().valor(emailStr).build();

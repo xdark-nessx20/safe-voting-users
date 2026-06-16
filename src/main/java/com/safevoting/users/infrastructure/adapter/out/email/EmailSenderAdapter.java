@@ -2,6 +2,7 @@ package com.safevoting.users.infrastructure.adapter.out.email;
 
 import com.safevoting.users.domain.repository.EmailSender;
 import com.safevoting.users.domain.shared.Email;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
@@ -10,15 +11,12 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
 public class EmailSenderAdapter implements EmailSender {
 
     private static final Logger log = LoggerFactory.getLogger(EmailSenderAdapter.class);
 
     private final JavaMailSender javaMailSender;
-
-    public EmailSenderAdapter(JavaMailSender javaMailSender) {
-        this.javaMailSender = javaMailSender;
-    }
 
     @Override
     public Mono<Void> enviarOtp(Email email, String codigo) {

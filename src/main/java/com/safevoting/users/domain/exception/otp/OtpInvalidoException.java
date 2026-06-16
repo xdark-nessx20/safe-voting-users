@@ -1,12 +1,14 @@
-package com.safevoting.users.domain.model.exception.otp;
+package com.safevoting.users.domain.exception.otp;
 
-import com.safevoting.users.domain.model.exception.comun.DomainException;
-
-public class OtpInvalidoException extends DomainException {
+public class OtpInvalidoException extends RuntimeException {
 
     private static final String ERROR_CODE = "OTP_INVALIDO";
 
     public OtpInvalidoException() {
-        super("El código OTP es inválido", ERROR_CODE);
+        super("El código OTP es inválido");
+    }
+
+    public String getErrorCode() {
+        return ERROR_CODE;
     }
 }

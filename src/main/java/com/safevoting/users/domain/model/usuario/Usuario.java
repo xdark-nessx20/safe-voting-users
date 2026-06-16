@@ -1,59 +1,99 @@
 package com.safevoting.users.domain.model.usuario;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
+import com.safevoting.users.domain.shared.Phone;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class Usuario {
 
     private UUID id;
     private String nombre;
     private Email email;
-    private String telefono;
+    private Phone telefono;
     private DocumentoIdentidad documento;
     private Municipio municipio;
     private Rol rol;
-    private EstadoUsuario estado;
-    private Instant createdAt;
 
-    public Usuario(UUID id, String nombre, Email email, String telefono, DocumentoIdentidad documento,
-                   Municipio municipio, Rol rol, EstadoUsuario estado, Instant createdAt) {
-        this.id = id;
-        this.nombre = nombre;
-        this.email = email;
-        this.telefono = telefono;
-        this.documento = documento;
-        this.municipio = municipio;
-        this.rol = rol;
-        this.estado = estado;
-        this.createdAt = createdAt;
-    }
+    @Builder.Default
+    private EstadoUsuario estado = EstadoUsuario.ACTIVO;
 
-    public static class UsuarioBuilder {
-        public Usuario build() {
-            Usuario u = new Usuario(id, nombre, email, telefono, documento, municipio, rol, estado, createdAt);
-            u.validateInfo();
-            return u;
-        }
-    }
+    @Builder.Default
+    private Instant createdAt = Instant.now();
 
     public void validateInfo() {
         validateNombre();
         validateEmail();
+        validateTelefono();
         validateDocumento();
         validateMunicipio();
         validateRol();
         validateEstado();
+    }
+
+    public boolean esActivo() {
+        return this.estado == EstadoUsuario.ACTIVO;
+    }
+
+    public boolean esHabilitado() {
+        return this.estado == EstadoUsuario.HABILITADO;
+    }
+
+    public boolean esInactivo() {
+        return this.estado == EstadoUsuario.INACTIVO;
+    }
+
+    public void habilitar() {
+        if (!esActivo()) {
+            throw new DatosInvalidosException("Solo se puede habilitar un usuario en estado ACTIVO");
+        }
+        this.estado = EstadoUsuario.HABILITADO;
+    }
+
+    public void inhabilitar() {
+        if (!esHabilitado()) {
+            throw new DatosInvalidosException("Solo se puede inhabilitar un usuario en estado HABILITADO");
+        }
+        this.estado = EstadoUsuario.ACTIVO;
+    }
+
+    public void suspender() {
+        if (esInactivo()) {
+            throw new DatosInvalidosException("No se puede suspender un usuario en estado INACTIVO");
+        }
+        this.estado = EstadoUsuario.INACTIVO;
+    }
+
+    public void reactivar() {
+        if (!esInactivo()) {
+            throw new DatosInvalidosException("Solo se puede reactivar un usuario en estado INACTIVO");
+        }
+        this.estado = EstadoUsuario.ACTIVO;
+    }
+
+    public void setMunicipio(Municipio municipio) {
+        this.municipio = municipio;
+        validateMunicipio();
+    }
+
+    public void setTelefono(Phone newPhone){
+        newPhone.validateInfo();
+        this.telefono = newPhone;
+
     }
 
     private void validateNombre() {
@@ -67,6 +107,12 @@ public class Usuario {
             throw new DatosInvalidosException("El email no puede ser nulo");
         }
         email.validateInfo();
+    }
+
+    private void validateTelefono() {
+        if (telefono != null) {
+            telefono.validateInfo();
+        }
     }
 
     private void validateDocumento() {
@@ -92,15 +138,5 @@ public class Usuario {
         if (estado == null) {
             throw new DatosInvalidosException("El estado no puede ser nulo");
         }
-    }
-
-    public void habilitar() {
-        this.estado = EstadoUsuario.HABILITADO;
-        validateInfo();
-    }
-
-    public void suspender() {
-        this.estado = EstadoUsuario.INACTIVO;
-        validateInfo();
     }
 }

@@ -3,9 +3,9 @@ package com.safevoting.users.integration.rest.auth;
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
-import com.safevoting.users.domain.model.exception.geografia.MunicipioNoEncontradoException;
-import com.safevoting.users.domain.model.exception.usuario.DocumentoDuplicadoException;
-import com.safevoting.users.domain.model.exception.usuario.EmailDuplicadoException;
+import com.safevoting.users.domain.exception.geografia.MunicipioNoEncontradoException;
+import com.safevoting.users.domain.exception.usuario.DocumentoDuplicadoException;
+import com.safevoting.users.domain.exception.usuario.EmailDuplicadoException;
 import com.safevoting.users.domain.model.geografia.Departamento;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
@@ -13,6 +13,7 @@ import com.safevoting.users.domain.model.usuario.Rol;
 import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
+import com.safevoting.users.domain.shared.Phone;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.AuthController;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.AuthResponse;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.RegisterRequest;
@@ -84,7 +85,7 @@ class AuthControllerIntegrationTest {
     private final Usuario usuarioMapeado = Usuario.builder()
             .nombre("Juan Pérez")
             .email(Email.builder().valor("juan@example.com").build())
-            .telefono("3001234567")
+            .telefono(Phone.builder().valor("3001234567").build())
             .documento(DocumentoIdentidad.builder().valor("123456789").build())
             .municipio(municipioMock)
             .rol(Rol.VOTANTE)

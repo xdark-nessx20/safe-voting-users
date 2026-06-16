@@ -1,13 +1,12 @@
 package com.safevoting.users.infrastructure.adapter.in.rest.common;
 
-import com.safevoting.users.domain.model.exception.comun.DatosInvalidosException;
-import com.safevoting.users.domain.model.exception.comun.DomainException;
-import com.safevoting.users.domain.model.exception.comun.RolInvalidoException;
-import com.safevoting.users.domain.model.exception.geografia.MunicipioNoEncontradoException;
-import com.safevoting.users.domain.model.exception.otp.OtpExpiradoException;
-import com.safevoting.users.domain.model.exception.otp.OtpInvalidoException;
-import com.safevoting.users.domain.model.exception.otp.ReintentosExcedidosException;
-import com.safevoting.users.domain.model.exception.usuario.*;
+import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import com.safevoting.users.domain.exception.geografia.MunicipioNoEncontradoException;
+import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
+import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
+import com.safevoting.users.domain.exception.otp.ReintentosExcedidosException;
+import com.safevoting.users.domain.exception.otp.TransicionEstadoOtpInvalidaException;
+import com.safevoting.users.domain.exception.usuario.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -57,6 +56,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleReintentosExcedidos(ReintentosExcedidosException ex) {
         var body = new ApiErrorResponse(401, "No Autorizado", ex.getMessage(), ex.getErrorCode());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(TransicionEstadoOtpInvalidaException.class)
+    public ResponseEntity<ApiErrorResponse> handleTransicionEstadoOtpInvalida(TransicionEstadoOtpInvalidaException ex) {
+        var body = new ApiErrorResponse(422, "Entidad no Procesable", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 
     @ExceptionHandler(MunicipioNoEncontradoException.class)

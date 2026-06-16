@@ -1,9 +1,9 @@
 package com.safevoting.users.unit.application.auth;
 
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
-import com.safevoting.users.domain.model.exception.geografia.MunicipioNoEncontradoException;
-import com.safevoting.users.domain.model.exception.usuario.DocumentoDuplicadoException;
-import com.safevoting.users.domain.model.exception.usuario.EmailDuplicadoException;
+import com.safevoting.users.domain.exception.geografia.MunicipioNoEncontradoException;
+import com.safevoting.users.domain.exception.usuario.DocumentoDuplicadoException;
+import com.safevoting.users.domain.exception.usuario.EmailDuplicadoException;
 import com.safevoting.users.domain.model.geografia.Departamento;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
@@ -13,6 +13,7 @@ import com.safevoting.users.domain.repository.MunicipioRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
+import com.safevoting.users.domain.shared.Phone;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +49,7 @@ class RegisterVotanteUseCaseTest {
         return Usuario.builder()
                 .nombre("Juan Pérez")
                 .email(email)
-                .telefono("3001234567")
+                .telefono(Phone.builder().valor("3001234567").build())
                 .documento(documento)
                 .municipio(municipio)
                 .rol(Rol.VOTANTE)

@@ -2,6 +2,9 @@
 *.iml
 
 *template.md
+# Java
+*.class
+*.jar
 
 # Gradle
 .gradle/
@@ -10,9 +13,6 @@ build/
 !gradlew
 !gradlew.bat
 
-# Java
-*.class
-*.jar
 
 # OS
 .DS_Store
