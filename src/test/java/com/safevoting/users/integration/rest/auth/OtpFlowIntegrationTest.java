@@ -7,7 +7,6 @@ import com.safevoting.users.infrastructure.adapter.in.rest.auth.AuthController;
 import com.safevoting.users.application.auth.AuthResult;
 import com.safevoting.users.infrastructure.adapter.in.rest.auth.mapper.AuthDtoMapper;
 import com.safevoting.users.infrastructure.adapter.in.rest.common.GlobalExceptionHandler;
-import com.safevoting.users.infrastructure.config.BeanConfiguration;
 import com.safevoting.users.infrastructure.config.JwtFilter;
 import com.safevoting.users.infrastructure.config.JwtProvider;
 import com.safevoting.users.infrastructure.config.SecurityConfig;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.when;
                 ReactiveUserDetailsServiceAutoConfiguration.class
         }
 )
-@Import({GlobalExceptionHandler.class, BeanConfiguration.class})
+@Import({GlobalExceptionHandler.class})
 class OtpFlowIntegrationTest {
 
     @Autowired

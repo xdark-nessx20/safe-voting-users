@@ -16,7 +16,7 @@ import com.safevoting.users.infrastructure.adapter.in.rest.admin.AdminController
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.dto.UsuarioResponse;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.mapper.UsuarioDtoMapper;
 import com.safevoting.users.infrastructure.adapter.in.rest.common.GlobalExceptionHandler;
-import com.safevoting.users.infrastructure.config.AdminBeanConfiguration;
+
 import com.safevoting.users.infrastructure.config.JwtFilter;
 import com.safevoting.users.infrastructure.config.JwtProvider;
 import com.safevoting.users.infrastructure.config.SecurityConfig;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
                 ReactiveUserDetailsServiceAutoConfiguration.class
         }
 )
-@Import({GlobalExceptionHandler.class, AdminBeanConfiguration.class})
+@Import({GlobalExceptionHandler.class})
 class AdminControllerIntegrationTest {
 
     private static final UUID GESTOR_UID = UUID.randomUUID();

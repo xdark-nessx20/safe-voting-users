@@ -43,7 +43,7 @@ public class OtpRepositoryAdapter implements OtpRepository {
     @Override
     public Mono<Void> invalidarExpirados() {
         return databaseClient.sql("""
-                    UPDATE otp
+                    UPDATE otps
                     SET estado = :nuevoEstado
                     WHERE estado = :estadoActivo AND expiracion < :ahora
                     """)

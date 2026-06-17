@@ -13,7 +13,6 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 public class Municipio {
 
     private UUID id;
@@ -27,6 +26,10 @@ public class Municipio {
         if (departamento == null) {
             throw new DatosInvalidosException("El departamento no puede ser nulo");
         }
+    }
+
+    public boolean equals(Municipio otroMunicipio){
+        return this.id.equals(otroMunicipio.id);
     }
 
     private boolean nombreInvalido(){

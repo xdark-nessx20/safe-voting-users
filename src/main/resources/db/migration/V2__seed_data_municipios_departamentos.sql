@@ -1,4 +1,4 @@
-INSERT INTO departamento (nombre)
+INSERT INTO departamentos (nombre)
 VALUES ('Amazonas'),
        ('Antioquia'),
        ('Arauca'),
@@ -32,9 +32,9 @@ VALUES ('Amazonas'),
        ('Vaupés'),
        ('Vichada');
 
-WITH deps AS (SELECT id, nombre FROM departamento)
+WITH deps AS (SELECT id, nombre FROM departamentos)
 INSERT
-INTO municipio (nombre, departamento_id)
+INTO municipios (nombre, departamento_id)
 SELECT m.nombre, deps.id
 FROM (VALUES
           -- Amazonas

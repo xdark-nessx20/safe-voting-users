@@ -22,9 +22,9 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
                    u.rol, u.estado, u.created_at,
                    m.id AS m_id, m.nombre AS m_nombre,
                    d.id AS d_id, d.nombre AS d_nombre
-            FROM usuario u
-            JOIN municipio m ON u.municipio_id = m.id
-            JOIN departamento d ON m.departamento_id = d.id
+            FROM usuarios u
+            JOIN municipios m ON u.municipio_id = m.id
+            JOIN departamentos d ON m.departamento_id = d.id
             """;
 
     private final UsuarioReactiveRepository reactiveRepository;
@@ -74,7 +74,7 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
 
     @Override
     public Mono<Long> countByMunicipioId(UUID municipioId) {
-        return databaseClient.sql("SELECT COUNT(*) AS total FROM usuario WHERE municipio_id = :municipioId")
+        return databaseClient.sql("SELECT COUNT(*) AS total FROM usuarios WHERE municipio_id = :municipioId")
                 .bind("municipioId", municipioId)
                 .map((row, meta) -> row.get("total", Long.class))
                 .one()
@@ -94,7 +94,7 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
     @Override
     public Mono<Long> updateEstadoBatch(UUID municipioId, EstadoUsuario nuevoEstado) {
         return databaseClient.sql("""
-                    UPDATE usuario
+                    UPDATE usuarios
                     SET estado = :nuevoEstado
                     WHERE municipio_id = :municipioId
                       AND rol = 'VOTANTE'
@@ -110,9 +110,9 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
     @Override
     public Mono<Long> updateEstadoBatchByDepartamento(UUID departamentoId, EstadoUsuario nuevoEstado) {
         return databaseClient.sql("""
-                    UPDATE usuario
+                    UPDATE usuarios
                     SET estado = :nuevoEstado
-                    WHERE municipio_id IN (SELECT id FROM municipio WHERE departamento_id = :departamentoId)
+                    WHERE municipio_id IN (SELECT id FROM municipios WHERE departamento_id = :departamentoId)
                       AND rol = 'VOTANTE'
                       AND estado != :nuevoEstado
                     """)
@@ -126,7 +126,7 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
     @Override
     public Mono<Long> updateEstadoBatchNacional(EstadoUsuario nuevoEstado) {
         return databaseClient.sql("""
-                    UPDATE usuario
+                    UPDATE usuarios
                     SET estado = :nuevoEstado
                     WHERE rol = 'VOTANTE'
                       AND estado != :nuevoEstado
