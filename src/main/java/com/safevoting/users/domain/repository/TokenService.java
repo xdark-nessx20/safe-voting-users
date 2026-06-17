@@ -1,6 +1,8 @@
 package com.safevoting.users.domain.repository;
 
+import java.util.UUID;
+
 public interface TokenService {
 
-    String generarToken(String email, String rol);
+    String generarToken(UUID usuarioId, String email, String rol);
 }

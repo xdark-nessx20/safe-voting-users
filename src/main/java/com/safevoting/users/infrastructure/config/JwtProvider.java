@@ -1,6 +1,5 @@
 package com.safevoting.users.infrastructure.config;
 
-import com.safevoting.users.domain.repository.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -11,9 +10,10 @@ import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
-public class JwtProvider implements TokenService {
+public class JwtProvider implements com.safevoting.users.domain.repository.TokenService {
 
     private final SecretKey secretKey;
     private final long expirationMinutes;
@@ -26,13 +26,13 @@ public class JwtProvider implements TokenService {
     }
 
     @Override
-    public String generarToken(String email, String rol) {
+    public String generarToken(UUID usuarioId, String email, String rol) {
         Date ahora = new Date();
         Date expiracion = new Date(ahora.getTime() + expirationMinutes * 60 * 1000);
 
         return Jwts.builder()
                 .subject(email)
-                .claims(Map.of("rol", rol))
+                .claims(Map.of("rol", rol, "uid", usuarioId.toString()))
                 .issuedAt(ahora)
                 .expiration(expiracion)
                 .signWith(secretKey)
@@ -49,5 +49,14 @@ public class JwtProvider implements TokenService {
 
     public String extraerEmail(String token) {
         return validarToken(token).getSubject();
+    }
+
+    public String extraerRol(String token) {
+        return validarToken(token).get("rol", String.class);
+    }
+
+    public UUID extraerUsuarioId(String token) {
+        String uid = validarToken(token).get("uid", String.class);
+        return UUID.fromString(uid);
     }
 }

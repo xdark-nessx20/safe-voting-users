@@ -88,6 +88,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    @ExceptionHandler(AlcanceInsuficienteException.class)
+    public ResponseEntity<ApiErrorResponse> handleAlcanceInsuficiente(AlcanceInsuficienteException ex) {
+        var body = new ApiErrorResponse(403, "Prohibido", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(TransicionEstadoInvalidaException.class)
+    public ResponseEntity<ApiErrorResponse> handleTransicionEstadoInvalida(TransicionEstadoInvalidaException ex) {
+        var body = new ApiErrorResponse(422, "Entidad no Procesable", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(GestorNoModificableException.class)
+    public ResponseEntity<ApiErrorResponse> handleGestorNoModificable(GestorNoModificableException ex) {
+        var body = new ApiErrorResponse(403, "Prohibido", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    public ResponseEntity<ApiErrorResponse> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
+        var body = new ApiErrorResponse(404, "No Encontrado", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ApiErrorResponse> handleValidacion(WebExchangeBindException ex) {
         String mensaje = ex.getFieldErrors().stream()
