@@ -16,16 +16,26 @@ public class BuscarUsuarioPorDocumentoUseCase {
     private final UsuarioRepository usuarioRepository;
     private final GestorElectoralRepository gestorElectoralRepository;
 
-    public Mono<Usuario> ejecutar(UUID gestorUsuarioId, String documento) {
+    public Mono<Usuario> ejecutar(UUID actorId, String documento) {
         DocumentoIdentidad doc = DocumentoIdentidad.builder().valor(documento).build();
 
-        return gestorElectoralRepository.findByUsuarioId(gestorUsuarioId)
-                .flatMap(gestor ->
-                        usuarioRepository.findByDocumento(doc)
-                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento)))
-                                .filter(objetivo -> !objetivo.esGestor())
-                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento)))
-                                .filter(objetivo -> gestor.cubre(objetivo.getMunicipio()))
-                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento))));
+        return usuarioRepository.findById(actorId)
+                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                .flatMap(actor ->
+                        Mono.just(actor)
+                                .filter(Usuario::esAdmin)
+                                .flatMap(a -> usuarioRepository.findByDocumento(doc)
+                                        .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento))))
+                                .switchIfEmpty(
+                                        gestorElectoralRepository.findByUsuarioId(actorId)
+                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                                                .flatMap(gestor ->
+                                                        usuarioRepository.findByDocumento(doc)
+                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento)))
+                                                                .filter(objetivo -> !objetivo.esGestor())
+                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento)))
+                                                                .filter(objetivo -> gestor.cubre(objetivo.getMunicipio()))
+                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documento))))
+                                ));
     }
 }

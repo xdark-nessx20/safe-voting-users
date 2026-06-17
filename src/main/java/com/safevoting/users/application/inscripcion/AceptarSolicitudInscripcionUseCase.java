@@ -21,29 +21,45 @@ public class AceptarSolicitudInscripcionUseCase {
     private final UsuarioRepository usuarioRepository;
     private final GestorElectoralRepository gestorElectoralRepository;
 
-    public Mono<SolicitudCambioInscripcion> ejecutar(UUID gestorUsuarioId, UUID solicitudId) {
-        return Mono.zip(
-                gestorElectoralRepository.findByUsuarioId(gestorUsuarioId)
-                        .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(gestorUsuarioId))),
-                solicitudRepository.findById(solicitudId)
-                        .switchIfEmpty(Mono.error(new SolicitudNotFoundException(solicitudId)))
-        ).flatMap(tuple -> {
-            GestorElectoral gestor = tuple.getT1();
-            SolicitudCambioInscripcion solicitud = tuple.getT2();
-
-            gestor.validarAlcance(solicitud.getMunicipioDestino());
-
-            return usuarioRepository.findById(solicitud.getUsuarioId())
-                    .flatMap(votante -> {
-                        solicitud.aceptar();
-                        solicitud.setGestor(gestor.getId());
-                        votante.setMunicipio(solicitud.getMunicipioDestino());
-                        return updateSolicitudAndVotante(solicitud, votante);
-                    });
-        });
+    public Mono<SolicitudCambioInscripcion> ejecutar(UUID actorId, UUID solicitudId) {
+        return usuarioRepository.findById(actorId)
+                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                .flatMap(actor ->
+                        solicitudRepository.findById(solicitudId)
+                                .switchIfEmpty(Mono.error(new SolicitudNotFoundException(solicitudId)))
+                                .flatMap(solicitud ->
+                                        Mono.just(actor)
+                                                .filter(Usuario::esAdmin)
+                                                .flatMap(a -> operacionAdmin(solicitud, actorId))
+                                                .switchIfEmpty(
+                                                        gestorElectoralRepository.findByUsuarioId(actorId)
+                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                                                                .flatMap(gestor -> operacionGestor(solicitud, gestor))
+                                                )));
     }
 
-    private Mono<SolicitudCambioInscripcion> updateSolicitudAndVotante(SolicitudCambioInscripcion solicitud, Usuario votante){
+    private Mono<SolicitudCambioInscripcion> operacionAdmin(SolicitudCambioInscripcion solicitud, UUID actorId) {
+        return usuarioRepository.findById(solicitud.getUsuarioId())
+                .flatMap(votante -> {
+                    solicitud.aceptar();
+                    solicitud.setGestor(actorId);
+                    votante.setMunicipio(solicitud.getMunicipioDestino());
+                    return updateSolicitudAndVotante(solicitud, votante);
+                });
+    }
+
+    private Mono<SolicitudCambioInscripcion> operacionGestor(SolicitudCambioInscripcion solicitud, GestorElectoral gestor){
+        gestor.validarAlcance(solicitud.getMunicipioDestino());
+        return usuarioRepository.findById(solicitud.getUsuarioId())
+                .flatMap(votante -> {
+                    solicitud.aceptar();
+                    solicitud.setGestor(gestor.getId());
+                    votante.setMunicipio(solicitud.getMunicipioDestino());
+                    return updateSolicitudAndVotante(solicitud, votante);
+                });
+    }
+
+    private Mono<SolicitudCambioInscripcion> updateSolicitudAndVotante(SolicitudCambioInscripcion solicitud, Usuario votante) {
         return solicitudRepository.update(solicitud)
                 .filter(rows -> rows > 0)
                 .switchIfEmpty(Mono.error(new SolicitudYaProcesadaException(solicitud.getId())))

@@ -29,6 +29,6 @@ public class GestorElectoralRepositoryAdapter implements GestorElectoralReposito
     public Mono<GestorElectoral> save(GestorElectoral gestor) {
         GestorElectoralEntity entity = mapper.toEntity(gestor);
         return reactiveRepository.save(entity)
-                .map(savedEntity -> mapper.toDomain(savedEntity, gestor));
+                .thenReturn(gestor);
     }
 }

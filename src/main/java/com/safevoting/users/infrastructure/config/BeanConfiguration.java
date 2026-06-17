@@ -104,8 +104,9 @@ public class BeanConfiguration {
     @Bean
     public ListarSolicitudesPendientesUseCase listarSolicitudesPendientesUseCase(
             SolicitudCambioInscripcionRepository solicitudRepository,
-            GestorElectoralRepository gestorElectoralRepository) {
-        return new ListarSolicitudesPendientesUseCase(solicitudRepository, gestorElectoralRepository);
+            GestorElectoralRepository gestorElectoralRepository,
+            UsuarioRepository usuarioRepository) {
+        return new ListarSolicitudesPendientesUseCase(solicitudRepository, gestorElectoralRepository, usuarioRepository);
     }
 
     @Bean
@@ -119,7 +120,8 @@ public class BeanConfiguration {
     @Bean
     public RechazarSolicitudInscripcionUseCase rechazarSolicitudInscripcionUseCase(
             SolicitudCambioInscripcionRepository solicitudRepository,
-            GestorElectoralRepository gestorElectoralRepository) {
-        return new RechazarSolicitudInscripcionUseCase(solicitudRepository, gestorElectoralRepository);
+            GestorElectoralRepository gestorElectoralRepository,
+            UsuarioRepository usuarioRepository) {
+        return new RechazarSolicitudInscripcionUseCase(solicitudRepository, gestorElectoralRepository, usuarioRepository);
     }
 }
