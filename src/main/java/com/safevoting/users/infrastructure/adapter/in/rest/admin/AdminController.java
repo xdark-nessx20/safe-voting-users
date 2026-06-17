@@ -5,16 +5,17 @@ import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorAlcanceUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorMunicipioUseCase;
 import com.safevoting.users.application.usuario.ListarUsuariosUseCase;
-import com.safevoting.users.application.usuario.PaginaResultado;
 import com.safevoting.users.domain.model.usuario.AlcanceOperacion;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
-import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.dto.*;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.mapper.UsuarioDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -77,7 +78,7 @@ public class AdminController {
 
     @GetMapping
     @Operation(summary = "Listar usuarios por municipio de inscripción")
-    public Mono<ResponseEntity<PaginaResponse<UsuarioResponse>>> listarUsuarios(
+    public Mono<ResponseEntity<Page<UsuarioResponse>>> listarUsuarios(
             @RequestParam UUID municipioId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -87,9 +88,9 @@ public class AdminController {
                     var contenido = resultado.contenido().stream()
                             .map(dtoMapper::toResponse)
                             .toList();
-                    return ResponseEntity.ok(new PaginaResponse<>(
-                            contenido, resultado.pagina(), resultado.tamano(),
-                            resultado.totalElementos(), resultado.totalPaginas()));
+                    return ResponseEntity.ok(new PageImpl<>(contenido,
+                            PageRequest.of(resultado.pagina(), resultado.tamano()),
+                            resultado.totalElementos()));
                 });
     }
 

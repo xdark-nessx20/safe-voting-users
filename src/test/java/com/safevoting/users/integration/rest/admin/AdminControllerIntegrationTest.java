@@ -187,7 +187,7 @@ class AdminControllerIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.totalElementos").isEqualTo(1);
+                .jsonPath("$.totalElements").isEqualTo(1);
     }
 
     @Test
