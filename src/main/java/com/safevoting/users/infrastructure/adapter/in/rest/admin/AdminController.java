@@ -5,22 +5,16 @@ import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorAlcanceUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorMunicipioUseCase;
 import com.safevoting.users.application.usuario.ListarUsuariosUseCase;
-import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import com.safevoting.users.application.usuario.PaginaResultado;
 import com.safevoting.users.domain.model.usuario.AlcanceOperacion;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
-import com.safevoting.users.domain.model.usuario.GestorElectoral;
-import com.safevoting.users.domain.model.usuario.Rol;
 import com.safevoting.users.domain.model.usuario.Usuario;
-import com.safevoting.users.domain.repository.GestorElectoralRepository;
-import com.safevoting.users.domain.repository.UsuarioRepository;
-import com.safevoting.users.domain.shared.Email;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.dto.*;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.mapper.UsuarioDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -40,8 +34,6 @@ public class AdminController {
     private final CambiarEstadoMasivoPorMunicipioUseCase cambiarEstadoMasivoPorMunicipioUseCase;
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final BuscarUsuarioPorDocumentoUseCase buscarUsuarioPorDocumentoUseCase;
-    private final UsuarioRepository usuarioRepository;
-    private final GestorElectoralRepository gestorElectoralRepository;
     private final UsuarioDtoMapper dtoMapper;
 
     @PatchMapping("/{documento}/estado")
@@ -51,8 +43,8 @@ public class AdminController {
             @Valid @RequestBody CambiarEstadoRequest request) {
         EstadoUsuario nuevoEstado = EstadoUsuario.valueOf(request.estado().toUpperCase());
 
-        return obtenerGestor()
-                .flatMap(gestor -> cambiarEstadoIndividualUseCase.ejecutar(documento, nuevoEstado, gestor))
+        return usuarioIdAutenticado()
+                .flatMap(id -> cambiarEstadoIndividualUseCase.ejecutar(id, documento, nuevoEstado))
                 .map(usuario -> ResponseEntity.ok(dtoMapper.toResponse(usuario)));
     }
 
@@ -63,14 +55,10 @@ public class AdminController {
         AlcanceOperacion alcance = AlcanceOperacion.valueOf(request.alcance().toUpperCase());
         EstadoUsuario nuevoEstado = EstadoUsuario.valueOf(request.estado().toUpperCase());
 
-        return obtenerGestor()
-                .flatMap(gestor ->
+        return usuarioIdAutenticado()
+                .flatMap(id ->
                         cambiarEstadoMasivoPorAlcanceUseCase.ejecutar(
-                                alcance,
-                                request.departamentoId(),
-                                request.municipioId(),
-                                nuevoEstado,
-                                gestor))
+                                id, alcance, request.departamentoId(), request.municipioId(), nuevoEstado))
                 .map(count -> ResponseEntity.ok(Map.of("usuariosModificados", count)));
     }
 
@@ -81,9 +69,9 @@ public class AdminController {
             @RequestParam String estado) {
         EstadoUsuario nuevoEstado = EstadoUsuario.valueOf(estado.toUpperCase());
 
-        return obtenerGestor()
-                .flatMap(gestor ->
-                        cambiarEstadoMasivoPorMunicipioUseCase.ejecutar(municipioId, nuevoEstado, gestor))
+        return usuarioIdAutenticado()
+                .flatMap(id ->
+                        cambiarEstadoMasivoPorMunicipioUseCase.ejecutar(id, municipioId, nuevoEstado))
                 .map(count -> ResponseEntity.ok(Map.of("usuariosModificados", count)));
     }
 
@@ -93,32 +81,29 @@ public class AdminController {
             @RequestParam UUID municipioId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return obtenerGestor()
-                .flatMap(gestor -> listarUsuariosUseCase.ejecutar(municipioId, page, size, gestor))
-                .map(ResponseEntity::ok);
+        return usuarioIdAutenticado()
+                .flatMap(id -> listarUsuariosUseCase.ejecutar(id, municipioId, page, size))
+                .map(resultado -> {
+                    var contenido = resultado.contenido().stream()
+                            .map(dtoMapper::toResponse)
+                            .toList();
+                    return ResponseEntity.ok(new PaginaResponse<>(
+                            contenido, resultado.pagina(), resultado.tamano(),
+                            resultado.totalElementos(), resultado.totalPaginas()));
+                });
     }
 
     @GetMapping("/{documento}")
     @Operation(summary = "Buscar usuario por número de documento")
     public Mono<ResponseEntity<UsuarioResponse>> buscarPorDocumento(
             @PathVariable String documento) {
-        return obtenerGestor()
-                .flatMap(gestor -> buscarUsuarioPorDocumentoUseCase.ejecutar(documento, gestor))
+        return usuarioIdAutenticado()
+                .flatMap(id -> buscarUsuarioPorDocumentoUseCase.ejecutar(id, documento))
                 .map(usuario -> ResponseEntity.ok(dtoMapper.toResponse(usuario)));
     }
 
-    private Mono<GestorElectoral> obtenerGestor() {
+    private Mono<UUID> usuarioIdAutenticado() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication().getPrincipal().toString())
-                .flatMap(email -> usuarioRepository.findByEmail(Email.builder().valor(email).build()))
-                .filter(usuario -> usuario.getRol() == Rol.GESTOR_ELECTORAL)
-                .switchIfEmpty(Mono.error(new DatosInvalidosException("El usuario autenticado no es un gestor electoral")))
-                .flatMap(usuario ->
-                        gestorElectoralRepository.findByUsuarioId(usuario.getId())
-                                .map(gestor -> GestorElectoral.builder()
-                                        .id(gestor.getId())
-                                        .usuario(usuario)
-                                        .alcance(gestor.getAlcance())
-                                        .build()));
+                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()));
     }
 }

@@ -6,16 +6,16 @@ import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
 import com.safevoting.users.domain.shared.Phone;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
@@ -29,10 +29,10 @@ public class Usuario {
     private Municipio municipio;
     private Rol rol;
 
-    @Builder.Default
+    @lombok.Builder.Default
     private EstadoUsuario estado = EstadoUsuario.ACTIVO;
 
-    @Builder.Default
+    @lombok.Builder.Default
     private Instant createdAt = Instant.now();
 
     public void validateInfo() {

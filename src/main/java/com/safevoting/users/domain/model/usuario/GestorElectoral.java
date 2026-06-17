@@ -5,29 +5,23 @@ import com.safevoting.users.domain.exception.usuario.AlcanceInsuficienteExceptio
 import com.safevoting.users.domain.exception.usuario.GestorNoModificableException;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-public class GestorElectoral {
+@EqualsAndHashCode(callSuper = true)
+public class GestorElectoral extends Usuario {
 
-    private UUID id;
-    private Usuario usuario;
     private AlcanceOperacion alcance;
 
     public void validateInfo() {
-        if (usuario == null) {
-            throw new DatosInvalidosException("El gestor electoral debe tener un usuario asociado");
-        }
-        if (!usuario.esGestor()) {
+        super.validateInfo();
+        if (!esGestor()) {
             throw new DatosInvalidosException("El usuario asociado debe tener rol GESTOR_ELECTORAL");
         }
         if (alcance == null) {
@@ -36,7 +30,7 @@ public class GestorElectoral {
     }
 
     public boolean cubre(Municipio municipioObjetivo) {
-        return alcance.cubre(usuario.getMunicipio(), municipioObjetivo);
+        return alcance.cubre(getMunicipio(), municipioObjetivo);
     }
 
     public void validarAlcance(Municipio municipioObjetivo) {

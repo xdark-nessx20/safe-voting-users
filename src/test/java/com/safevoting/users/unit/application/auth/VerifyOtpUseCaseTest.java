@@ -82,7 +82,7 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.just(usuario));
-        when(tokenService.generarToken(emailStr, "VOTANTE")).thenReturn(tokenEsperado);
+        when(tokenService.generarToken(usuario.getId(), emailStr, "VOTANTE")).thenReturn(tokenEsperado);
 
         StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
                 .assertNext(result -> {
@@ -213,7 +213,7 @@ class VerifyOtpUseCaseTest {
         when(otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)).thenReturn(Mono.just(otp));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(usuarioRepository.findByEmail(email)).thenReturn(Mono.just(gestor));
-        when(tokenService.generarToken(emailStr, "GESTOR_ELECTORAL")).thenReturn(tokenEsperado);
+        when(tokenService.generarToken(gestor.getId(), emailStr, "GESTOR_ELECTORAL")).thenReturn(tokenEsperado);
 
         StepVerifier.create(useCase.ejecutar(emailStr, codigoCorrecto))
                 .assertNext(result -> {

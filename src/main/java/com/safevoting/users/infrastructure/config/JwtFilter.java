@@ -34,11 +34,11 @@ public class JwtFilter implements WebFilter {
 
         try {
             Claims claims = jwtProvider.validarToken(token);
-            String email = claims.getSubject();
+            String uid = claims.get("uid", String.class);
             String rol = claims.get("rol", String.class);
 
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
-            var authentication = new UsernamePasswordAuthenticationToken(email, null, authorities);
+            var authentication = new UsernamePasswordAuthenticationToken(uid, null, authorities);
 
             return chain.filter(exchange)
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));

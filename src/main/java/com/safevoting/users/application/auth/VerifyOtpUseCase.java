@@ -67,6 +67,7 @@ public class VerifyOtpUseCase {
 
     private AuthResult construirAuthResult(Usuario usuario) {
         String token = tokenService.generarToken(
+                usuario.getId(),
                 usuario.getEmail().getValor(),
                 usuario.getRol().name());
         return new AuthResult(

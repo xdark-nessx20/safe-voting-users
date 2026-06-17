@@ -10,6 +10,7 @@ import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtProvider implements com.safevoting.users.domain.repository.TokenService {
@@ -25,13 +26,13 @@ public class JwtProvider implements com.safevoting.users.domain.repository.Token
     }
 
     @Override
-    public String generarToken(String email, String rol) {
+    public String generarToken(UUID usuarioId, String email, String rol) {
         Date ahora = new Date();
         Date expiracion = new Date(ahora.getTime() + expirationMinutes * 60 * 1000);
 
         return Jwts.builder()
                 .subject(email)
-                .claims(Map.of("rol", rol))
+                .claims(Map.of("rol", rol, "uid", usuarioId.toString()))
                 .issuedAt(ahora)
                 .expiration(expiracion)
                 .signWith(secretKey)
@@ -52,5 +53,10 @@ public class JwtProvider implements com.safevoting.users.domain.repository.Token
 
     public String extraerRol(String token) {
         return validarToken(token).get("rol", String.class);
+    }
+
+    public UUID extraerUsuarioId(String token) {
+        String uid = validarToken(token).get("uid", String.class);
+        return UUID.fromString(uid);
     }
 }

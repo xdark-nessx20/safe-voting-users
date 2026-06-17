@@ -4,6 +4,7 @@ import com.safevoting.users.domain.exception.usuario.AlcanceInsuficienteExceptio
 import com.safevoting.users.domain.model.usuario.AlcanceOperacion;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.domain.model.usuario.GestorElectoral;
+import com.safevoting.users.domain.repository.GestorElectoralRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -14,16 +15,28 @@ import java.util.UUID;
 public class CambiarEstadoMasivoPorAlcanceUseCase {
 
     private final UsuarioRepository usuarioRepository;
+    private final GestorElectoralRepository gestorElectoralRepository;
 
-    public Mono<Long> ejecutar(AlcanceOperacion alcanceSolicitado, UUID departamentoId,
-                                UUID municipioId, EstadoUsuario nuevoEstado, GestorElectoral gestor) {
-        gestor.validarAlcanceNoSuperado(alcanceSolicitado);
+    public Mono<Long> ejecutar(UUID gestorUsuarioId, AlcanceOperacion alcanceSolicitado,
+                                UUID departamentoId, UUID municipioId, EstadoUsuario nuevoEstado) {
+        return gestorElectoralRepository.findByUsuarioId(gestorUsuarioId)
+                .flatMap(gestor -> {
+                    gestor.validarAlcanceNoSuperado(alcanceSolicitado);
+                    return ejecutarActualizacion(alcanceSolicitado, departamentoId, municipioId, nuevoEstado);
+                });
+    }
 
-        return switch (alcanceSolicitado) {
-            case MUNICIPAL -> usuarioRepository.updateEstadoBatch(municipioId, nuevoEstado);
-            case DEPARTAMENTAL -> usuarioRepository.updateEstadoBatchByDepartamento(departamentoId, nuevoEstado);
-            case NACIONAL -> usuarioRepository.updateEstadoBatchNacional(nuevoEstado);
-            default -> Mono.error(new AlcanceInsuficienteException("Alcance no soportado: " + alcanceSolicitado));
-        };
+    private Mono<Long> ejecutarActualizacion(AlcanceOperacion alcance, UUID departamentoId,
+                                              UUID municipioId, EstadoUsuario nuevoEstado) {
+        switch (alcance) {
+            case MUNICIPAL:
+                return usuarioRepository.updateEstadoBatch(municipioId, nuevoEstado);
+            case DEPARTAMENTAL:
+                return usuarioRepository.updateEstadoBatchByDepartamento(departamentoId, nuevoEstado);
+            case NACIONAL:
+                return usuarioRepository.updateEstadoBatchNacional(nuevoEstado);
+            default:
+                return Mono.error(new AlcanceInsuficienteException("Alcance no soportado: " + alcance));
+        }
     }
 }

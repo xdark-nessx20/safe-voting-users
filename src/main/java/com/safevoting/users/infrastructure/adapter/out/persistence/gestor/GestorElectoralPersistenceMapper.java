@@ -9,20 +9,27 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface GestorElectoralPersistenceMapper {
 
-    @Mapping(target = "usuarioId", source = "usuario.id")
+    @Mapping(target = "usuarioId", source = "id")
     @Mapping(target = "alcanceOperacion", source = "alcance")
     GestorElectoralEntity toEntity(GestorElectoral gestor);
 
-    @Mapping(target = "id", source = "entity.id")
-    @Mapping(target = "usuario", source = "usuario")
+    @Mapping(target = "id", source = "usuario.id")
+    @Mapping(target = "nombre", source = "usuario.nombre")
+    @Mapping(target = "email", source = "usuario.email")
+    @Mapping(target = "telefono", source = "usuario.telefono")
+    @Mapping(target = "documento", source = "usuario.documento")
+    @Mapping(target = "municipio", source = "usuario.municipio")
+    @Mapping(target = "rol", source = "usuario.rol")
+    @Mapping(target = "estado", source = "usuario.estado")
+    @Mapping(target = "createdAt", source = "usuario.createdAt")
     @Mapping(target = "alcance", source = "entity.alcanceOperacion")
     GestorElectoral toDomain(GestorElectoralEntity entity, Usuario usuario);
 
-    default String mapAlcance(AlcanceOperacion alcance) {
+    default String mapAlcanceOperacion(AlcanceOperacion alcance) {
         return alcance.name();
     }
 
-    default AlcanceOperacion mapAlcanceToDomain(String alcance) {
+    default AlcanceOperacion mapAlcanceOperacionToDomain(String alcance) {
         return AlcanceOperacion.valueOf(alcance);
     }
 }

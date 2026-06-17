@@ -8,7 +8,6 @@ import com.safevoting.users.application.usuario.ListarUsuariosUseCase;
 import com.safevoting.users.domain.repository.GestorElectoralRepository;
 import com.safevoting.users.domain.repository.MunicipioRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
-import com.safevoting.users.infrastructure.adapter.in.rest.admin.mapper.UsuarioDtoMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,34 +16,38 @@ public class AdminBeanConfiguration {
 
     @Bean
     public CambiarEstadoIndividualUseCase cambiarEstadoIndividualUseCase(
-            UsuarioRepository usuarioRepository) {
-        return new CambiarEstadoIndividualUseCase(usuarioRepository);
+            UsuarioRepository usuarioRepository,
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new CambiarEstadoIndividualUseCase(usuarioRepository, gestorElectoralRepository);
     }
 
     @Bean
     public CambiarEstadoMasivoPorAlcanceUseCase cambiarEstadoMasivoPorAlcanceUseCase(
-            UsuarioRepository usuarioRepository) {
-        return new CambiarEstadoMasivoPorAlcanceUseCase(usuarioRepository);
+            UsuarioRepository usuarioRepository,
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new CambiarEstadoMasivoPorAlcanceUseCase(usuarioRepository, gestorElectoralRepository);
     }
 
     @Bean
     public CambiarEstadoMasivoPorMunicipioUseCase cambiarEstadoMasivoPorMunicipioUseCase(
             UsuarioRepository usuarioRepository,
-            MunicipioRepository municipioRepository) {
-        return new CambiarEstadoMasivoPorMunicipioUseCase(usuarioRepository, municipioRepository);
+            MunicipioRepository municipioRepository,
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new CambiarEstadoMasivoPorMunicipioUseCase(usuarioRepository, municipioRepository, gestorElectoralRepository);
     }
 
     @Bean
     public ListarUsuariosUseCase listarUsuariosUseCase(
             UsuarioRepository usuarioRepository,
             MunicipioRepository municipioRepository,
-            UsuarioDtoMapper dtoMapper) {
-        return new ListarUsuariosUseCase(usuarioRepository, municipioRepository, dtoMapper);
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new ListarUsuariosUseCase(usuarioRepository, municipioRepository, gestorElectoralRepository);
     }
 
     @Bean
     public BuscarUsuarioPorDocumentoUseCase buscarUsuarioPorDocumentoUseCase(
-            UsuarioRepository usuarioRepository) {
-        return new BuscarUsuarioPorDocumentoUseCase(usuarioRepository);
+            UsuarioRepository usuarioRepository,
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new BuscarUsuarioPorDocumentoUseCase(usuarioRepository, gestorElectoralRepository);
     }
 }
