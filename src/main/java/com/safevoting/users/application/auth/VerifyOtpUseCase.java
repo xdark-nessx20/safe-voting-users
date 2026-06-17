@@ -39,37 +39,27 @@ public class VerifyOtpUseCase {
     }
 
     private Mono<AuthResult> procesarCodigo(Otp otp, String codigo, Usuario usuario) {
-        return Mono.just(otp)
-                .flatMap(o -> decidirRama(o, codigo))
-                .flatMap(otpRepository::update)
+        return Mono.fromRunnable(otp::incrementarIntento)
+                .then(Mono.defer(() -> otp.getCodigo().equals(codigo)
+                        ? ramaCodigoCorrecto(otp)
+                        : ramaCodigoIncorrecto(otp)))
                 .then(Mono.just(usuario))
                 .filter(Usuario::esHabilitado)
                 .switchIfEmpty(Mono.error(new UsuarioNoHabilitadoException()))
                 .map(this::construirAuthResult);
     }
 
-    private Mono<Otp> decidirRama(Otp otp, String codigo) {
-        return otp.getCodigo().equals(codigo)
-                ? ramaCodigoCorrecto(otp)
-                : ramaCodigoIncorrecto(otp);
-    }
-
     private Mono<Otp> ramaCodigoCorrecto(Otp otp) {
         return Mono.fromRunnable(otp::marcarUsado)
-                .then(Mono.just(otp));
+                .then(otpRepository.update(otp));
     }
 
     private Mono<Otp> ramaCodigoIncorrecto(Otp otp) {
-        return Mono.fromRunnable(otp::incrementarIntento)
-                .then(otpRepository.update(otp))
-                .flatMap(this::evaluarReintentos);
-    }
-
-    private Mono<Otp> evaluarReintentos(Otp otpActualizado) {
-        return Mono.<Otp>error(
-                otpActualizado.esInvalidado()
-                        ? new ReintentosExcedidosException()
-                        : new OtpInvalidoException());
+        return otpRepository.update(otp)
+                .flatMap(updated -> Mono.<Otp>error(
+                        updated.esInvalidado()
+                                ? new ReintentosExcedidosException()
+                                : new OtpInvalidoException()));
     }
 
     private AuthResult construirAuthResult(Usuario usuario) {
