@@ -9,6 +9,8 @@ import com.safevoting.users.domain.repository.GestorElectoralRepository;
 import com.safevoting.users.domain.repository.SolicitudCambioInscripcionRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -16,28 +18,38 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RechazarSolicitudInscripcionUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(RechazarSolicitudInscripcionUseCase.class);
+
     private final SolicitudCambioInscripcionRepository solicitudRepository;
     private final GestorElectoralRepository gestorElectoralRepository;
     private final UsuarioRepository usuarioRepository;
 
     public Mono<SolicitudCambioInscripcion> ejecutar(UUID actorId, UUID solicitudId, String motivoRechazo) {
+        log.debug("Rechazar solicitud {} como actor {}", solicitudId, actorId);
+
         return usuarioRepository.findById(actorId)
                 .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                .doOnNext(actor -> log.debug("Actor encontrado: id={}, rol={}", actor.getId(), actor.getRol()))
                 .flatMap(actor ->
                         solicitudRepository.findById(solicitudId)
                                 .switchIfEmpty(Mono.error(new SolicitudNotFoundException(solicitudId)))
-                                .flatMap(solicitud ->
-                                        Mono.just(actor)
-                                                .filter(Usuario::esAdmin)
-                                                .flatMap(a -> procesarSolicitud(solicitud, motivoRechazo, actorId))
-                                                .switchIfEmpty(
-                                                        gestorElectoralRepository.findByUsuarioId(actorId)
-                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
-                                                                .flatMap(gestor -> {
-                                                                    gestor.validarAlcance(solicitud.getMunicipioDestino());
-                                                                    return procesarSolicitud(solicitud, motivoRechazo, gestor.getId());
-                                                                })
-                                                )));
+                                .flatMap(solicitud -> {
+                                    log.debug("Solicitud cargada: id={}, estado={}", solicitud.getId(), solicitud.getEstado());
+                                    return Mono.just(actor)
+                                            .filter(Usuario::esAdmin)
+                                            .flatMap(a -> procesarSolicitud(solicitud, motivoRechazo, actorId))
+                                            .switchIfEmpty(
+                                                    gestorElectoralRepository.findByUsuarioId(actorId)
+                                                            .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                                                            .flatMap(gestor -> {
+                                                                log.debug("Gestor cargado: id={}, alcance={}",
+                                                                        gestor.getId(), gestor.getAlcance());
+                                                                gestor.validarAlcance(solicitud.getMunicipioDestino());
+                                                                return procesarSolicitud(solicitud, motivoRechazo, gestor.getId());
+                                                            })
+                                            );
+                                }))
+                .doOnError(e -> log.error("Error al rechazar solicitud {}: {}", solicitudId, e.getMessage(), e));
     }
 
     private Mono<SolicitudCambioInscripcion> procesarSolicitud(SolicitudCambioInscripcion solicitud, String motivoRechazo, UUID actorId){

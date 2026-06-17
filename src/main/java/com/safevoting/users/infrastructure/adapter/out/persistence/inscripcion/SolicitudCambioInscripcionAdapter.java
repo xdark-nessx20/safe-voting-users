@@ -1,9 +1,12 @@
 package com.safevoting.users.infrastructure.adapter.out.persistence.inscripcion;
 
+import com.safevoting.users.domain.exception.geografia.MunicipioNoEncontradoException;
 import com.safevoting.users.domain.model.inscripcion.SolicitudCambioInscripcion;
 import com.safevoting.users.domain.repository.MunicipioRepository;
 import com.safevoting.users.domain.repository.SolicitudCambioInscripcionRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -15,6 +18,8 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class SolicitudCambioInscripcionAdapter implements SolicitudCambioInscripcionRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(SolicitudCambioInscripcionAdapter.class);
 
     private final SolicitudCambioInscripcionReactiveRepository reactiveRepository;
     private final SolicitudCambioInscripcionPersistenceMapper mapper;
@@ -148,26 +153,47 @@ public class SolicitudCambioInscripcionAdapter implements SolicitudCambioInscrip
     @Override
     public Mono<Long> update(SolicitudCambioInscripcion solicitud) {
         SolicitudCambioInscripcionEntity entity = mapper.toEntity(solicitud);
-        return databaseClient.sql("""
+
+        var spec = databaseClient.sql("""
                     UPDATE solicitudes_cambio_inscripcion
                     SET estado = :estado, gestor_id = :gestorId, motivo_rechazo = :motivoRechazo,
                         fecha_resolucion = :fechaResolucion
                     WHERE id = :id AND estado = 'PENDIENTE'
                     """)
                 .bind("estado", entity.getEstado())
-                .bind("gestorId", entity.getGestorId())
-                .bind("motivoRechazo", entity.getMotivoRechazo())
-                .bind("fechaResolucion", entity.getFechaResolucion())
-                .bind("id", entity.getId())
-                .fetch()
+                .bind("id", entity.getId());
+
+        if (entity.getGestorId() != null) {
+            spec = spec.bind("gestorId", entity.getGestorId());
+        } else {
+            spec = spec.bindNull("gestorId", UUID.class);
+        }
+
+        if (entity.getMotivoRechazo() != null) {
+            spec = spec.bind("motivoRechazo", entity.getMotivoRechazo());
+        } else {
+            spec = spec.bindNull("motivoRechazo", String.class);
+        }
+
+        if (entity.getFechaResolucion() != null) {
+            spec = spec.bind("fechaResolucion", entity.getFechaResolucion());
+        } else {
+            spec = spec.bindNull("fechaResolucion", Instant.class);
+        }
+
+        return spec.fetch()
                 .rowsUpdated()
                 .map(Long::valueOf);
     }
 
     private Mono<SolicitudCambioInscripcion> toDomain(SolicitudCambioInscripcionEntity entity) {
         return Mono.zip(
-                municipioRepository.findById(entity.getMunicipioOrigenId()),
+                municipioRepository.findById(entity.getMunicipioOrigenId())
+                        .switchIfEmpty(Mono.error(new MunicipioNoEncontradoException(
+                                entity.getMunicipioOrigenId().toString()))),
                 municipioRepository.findById(entity.getMunicipioDestinoId())
+                        .switchIfEmpty(Mono.error(new MunicipioNoEncontradoException(
+                                entity.getMunicipioDestinoId().toString())))
         ).map(tuple -> mapper.toDomain(entity, tuple.getT1(), tuple.getT2()));
     }
 

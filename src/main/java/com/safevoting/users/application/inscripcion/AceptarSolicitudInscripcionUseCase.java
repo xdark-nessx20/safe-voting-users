@@ -10,6 +10,8 @@ import com.safevoting.users.domain.repository.GestorElectoralRepository;
 import com.safevoting.users.domain.repository.SolicitudCambioInscripcionRepository;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -17,29 +19,43 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AceptarSolicitudInscripcionUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(AceptarSolicitudInscripcionUseCase.class);
+
     private final SolicitudCambioInscripcionRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
     private final GestorElectoralRepository gestorElectoralRepository;
 
     public Mono<SolicitudCambioInscripcion> ejecutar(UUID actorId, UUID solicitudId) {
+        log.debug("Aceptar solicitud {} como actor {}", solicitudId, actorId);
+
         return usuarioRepository.findById(actorId)
                 .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                .doOnNext(actor -> log.debug("Actor encontrado: id={}, rol={}", actor.getId(), actor.getRol()))
                 .flatMap(actor ->
                         solicitudRepository.findById(solicitudId)
                                 .switchIfEmpty(Mono.error(new SolicitudNotFoundException(solicitudId)))
-                                .flatMap(solicitud ->
-                                        Mono.just(actor)
-                                                .filter(Usuario::esAdmin)
-                                                .flatMap(a -> operacionAdmin(solicitud, actorId))
-                                                .switchIfEmpty(
-                                                        gestorElectoralRepository.findByUsuarioId(actorId)
-                                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
-                                                                .flatMap(gestor -> operacionGestor(solicitud, gestor))
-                                                )));
+                                .flatMap(solicitud -> {
+                                    log.debug("Solicitud cargada: id={}, estado={}, votante={}",
+                                            solicitud.getId(), solicitud.getEstado(), solicitud.getUsuarioId());
+                                    return Mono.just(actor)
+                                            .filter(Usuario::esAdmin)
+                                            .flatMap(a -> operacionAdmin(solicitud, actorId))
+                                            .switchIfEmpty(
+                                                    gestorElectoralRepository.findByUsuarioId(actorId)
+                                                            .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                                                            .flatMap(gestor -> {
+                                                                log.debug("Gestor cargado: id={}, alcance={}",
+                                                                        gestor.getId(), gestor.getAlcance());
+                                                                return operacionGestor(solicitud, gestor);
+                                                            })
+                                            );
+                                }))
+                .doOnError(e -> log.error("Error al aceptar solicitud {}: {}", solicitudId, e.getMessage(), e));
     }
 
     private Mono<SolicitudCambioInscripcion> operacionAdmin(SolicitudCambioInscripcion solicitud, UUID actorId) {
         return usuarioRepository.findById(solicitud.getUsuarioId())
+                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(solicitud.getUsuarioId())))
                 .flatMap(votante -> {
                     solicitud.aceptar();
                     solicitud.setGestor(actorId);
@@ -51,6 +67,7 @@ public class AceptarSolicitudInscripcionUseCase {
     private Mono<SolicitudCambioInscripcion> operacionGestor(SolicitudCambioInscripcion solicitud, GestorElectoral gestor){
         gestor.validarAlcance(solicitud.getMunicipioDestino());
         return usuarioRepository.findById(solicitud.getUsuarioId())
+                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(solicitud.getUsuarioId())))
                 .flatMap(votante -> {
                     solicitud.aceptar();
                     solicitud.setGestor(gestor.getId());

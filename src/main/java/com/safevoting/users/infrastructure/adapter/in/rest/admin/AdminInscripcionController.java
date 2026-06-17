@@ -3,6 +3,7 @@ package com.safevoting.users.infrastructure.adapter.in.rest.admin;
 import com.safevoting.users.application.inscripcion.AceptarSolicitudInscripcionUseCase;
 import com.safevoting.users.application.inscripcion.ListarSolicitudesPendientesUseCase;
 import com.safevoting.users.application.inscripcion.RechazarSolicitudInscripcionUseCase;
+import com.safevoting.users.domain.exception.usuario.UsuarioNoEncontradoException;
 import com.safevoting.users.domain.model.inscripcion.SolicitudCambioInscripcion;
 import com.safevoting.users.domain.repository.UsuarioRepository;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.dto.RechazarSolicitudRequest;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +30,8 @@ import java.util.UUID;
 @Tag(name = "Administración de Cambios de Inscripción")
 @RequiredArgsConstructor
 public class AdminInscripcionController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminInscripcionController.class);
 
     private final ListarSolicitudesPendientesUseCase listarSolicitudesPendientesUseCase;
     private final AceptarSolicitudInscripcionUseCase aceptarSolicitudInscripcionUseCase;
@@ -74,6 +79,19 @@ public class AdminInscripcionController {
 
     private Mono<UUID> usuarioIdAutenticado() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()));
+                .handle((ctx, sink) -> {
+                    var auth = ctx.getAuthentication();
+                    if (auth == null || !auth.isAuthenticated()) {
+                        sink.error(new UsuarioNoEncontradoException("No hay usuario autenticado"));
+                        return;
+                    }
+                    var principal = auth.getName();
+                    try {
+                        sink.next(UUID.fromString(principal));
+                    } catch (IllegalArgumentException e) {
+                        log.error("uid inválido en el token: '{}'", principal, e);
+                        sink.error(new UsuarioNoEncontradoException("Token con identificador de usuario inválido"));
+                    }
+                });
     }
 }
