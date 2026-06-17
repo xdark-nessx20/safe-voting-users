@@ -1,6 +1,7 @@
 package com.safevoting.users.domain.model.usuario;
 
 import com.safevoting.users.domain.exception.common.DatosInvalidosException;
+import com.safevoting.users.domain.exception.usuario.RolInvalidoException;
 import com.safevoting.users.domain.model.geografia.Municipio;
 import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
@@ -58,7 +59,26 @@ public class Usuario {
     }
 
     public boolean esGestor() {
-        return this.rol == Rol.GESTOR_ELECTORAL;
+        return Rol.GESTOR_ELECTORAL.equals(this.rol);
+    }
+
+    public boolean esAdmin() {
+        return Rol.ADMIN.equals(this.rol);
+    }
+
+    public boolean esVotante(){
+        return Rol.VOTANTE.equals(this.rol);
+    }
+
+    public void asignarRolGestor() {
+        validarEsVotante();
+        this.rol = Rol.GESTOR_ELECTORAL;
+    }
+
+    private void validarEsVotante(){
+        if (!esVotante()){
+            throw new RolInvalidoException("El Usuario no tiene rol VOTANTE.");
+        }
     }
 
     public void habilitar() {

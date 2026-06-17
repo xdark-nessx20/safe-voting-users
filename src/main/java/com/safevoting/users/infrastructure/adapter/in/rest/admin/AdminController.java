@@ -1,5 +1,6 @@
 package com.safevoting.users.infrastructure.adapter.in.rest.admin;
 
+import com.safevoting.users.application.auth.AsignarGestorUseCase;
 import com.safevoting.users.application.usuario.BuscarUsuarioPorDocumentoUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorAlcanceUseCase;
@@ -8,6 +9,7 @@ import com.safevoting.users.application.usuario.ListarUsuariosUseCase;
 import com.safevoting.users.domain.model.usuario.AlcanceOperacion;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.dto.*;
+import com.safevoting.users.infrastructure.adapter.in.rest.auth.dto.MessageResponse;
 import com.safevoting.users.infrastructure.adapter.in.rest.admin.mapper.UsuarioDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,7 @@ public class AdminController {
     private final CambiarEstadoMasivoPorMunicipioUseCase cambiarEstadoMasivoPorMunicipioUseCase;
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final BuscarUsuarioPorDocumentoUseCase buscarUsuarioPorDocumentoUseCase;
+    private final AsignarGestorUseCase asignarGestorUseCase;
     private final UsuarioDtoMapper dtoMapper;
 
     @PatchMapping("/{documento}/estado")
@@ -101,6 +105,14 @@ public class AdminController {
         return usuarioIdAutenticado()
                 .flatMap(id -> buscarUsuarioPorDocumentoUseCase.ejecutar(id, documento))
                 .map(usuario -> ResponseEntity.ok(dtoMapper.toResponse(usuario)));
+    }
+
+    @PostMapping("/gestores")
+    @Operation(summary = "Asignar rol de gestor electoral a un votante (solo ADMIN)")
+    public Mono<ResponseEntity<MessageResponse>> asignarGestor(@Valid @RequestBody AsignarGestorRequest request) {
+        return asignarGestorUseCase.ejecutar(request.documento(), request.alcanceOperacion())
+                .map(g -> ResponseEntity.status(HttpStatus.OK)
+                        .body(new MessageResponse("Gestor electoral asignado exitosamente")));
     }
 
     private Mono<UUID> usuarioIdAutenticado() {

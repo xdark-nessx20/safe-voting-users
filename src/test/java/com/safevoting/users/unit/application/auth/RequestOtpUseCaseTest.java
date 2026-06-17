@@ -1,8 +1,8 @@
 package com.safevoting.users.unit.application.auth;
 
 import com.safevoting.users.application.auth.RequestOtpUseCase;
-import com.safevoting.users.domain.exception.usuario.EmailNoRegistradoException;
 import com.safevoting.users.domain.exception.usuario.UsuarioInactivoException;
+import com.safevoting.users.domain.exception.usuario.UsuarioNoEncontradoException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
@@ -44,8 +44,10 @@ class RequestOtpUseCaseTest {
     @InjectMocks
     private RequestOtpUseCase useCase;
 
+    private final String documentoStr = "123456789";
     private final String emailStr = "juan@example.com";
     private final Email email = Email.builder().valor(emailStr).build();
+    private final DocumentoIdentidad documento = DocumentoIdentidad.builder().valor(documentoStr).build();
     private final Municipio municipio = Municipio.builder()
             .id(UUID.randomUUID())
             .nombre("Medellín")
@@ -58,19 +60,19 @@ class RequestOtpUseCaseTest {
                 .id(UUID.randomUUID())
                 .nombre("Juan")
                 .email(email)
-                .documento(DocumentoIdentidad.builder().valor("123456789").build())
+                .documento(documento)
                 .municipio(municipio)
                 .rol(Rol.VOTANTE)
                 .estado(EstadoUsuario.HABILITADO)
                 .createdAt(Instant.now())
                 .build();
 
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(usuario));
+        when(usuarioRepository.findByDocumento(any(DocumentoIdentidad.class))).thenReturn(Mono.just(usuario));
         when(otpRepository.findByEmailAndEstado(any(Email.class), any(EstadoOtp.class))).thenReturn(Mono.empty());
         when(otpRepository.save(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(emailSender.enviarOtp(any(Email.class), any(String.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.ejecutar(emailStr))
+        StepVerifier.create(useCase.ejecutar(documentoStr))
                 .assertNext(mensaje -> {
                     assert mensaje.contains("recibirás un código");
                 })
@@ -78,11 +80,11 @@ class RequestOtpUseCaseTest {
     }
 
     @Test
-    void deberiaLanzarEmailNoRegistradoExceptionCuandoEmailNoExiste() {
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.empty());
+    void deberiaLanzarUsuarioNoEncontradoExceptionCuandoDocumentoNoExiste() {
+        when(usuarioRepository.findByDocumento(any(DocumentoIdentidad.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.ejecutar(emailStr))
-                .expectError(EmailNoRegistradoException.class)
+        StepVerifier.create(useCase.ejecutar(documentoStr))
+                .expectError(UsuarioNoEncontradoException.class)
                 .verify();
     }
 
@@ -92,16 +94,16 @@ class RequestOtpUseCaseTest {
                 .id(UUID.randomUUID())
                 .nombre("Juan")
                 .email(email)
-                .documento(DocumentoIdentidad.builder().valor("123456789").build())
+                .documento(documento)
                 .municipio(municipio)
                 .rol(Rol.VOTANTE)
                 .estado(EstadoUsuario.INACTIVO)
                 .createdAt(Instant.now())
                 .build();
 
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(usuario));
+        when(usuarioRepository.findByDocumento(any(DocumentoIdentidad.class))).thenReturn(Mono.just(usuario));
 
-        StepVerifier.create(useCase.ejecutar(emailStr))
+        StepVerifier.create(useCase.ejecutar(documentoStr))
                 .expectError(UsuarioInactivoException.class)
                 .verify();
     }
@@ -112,7 +114,7 @@ class RequestOtpUseCaseTest {
                 .id(UUID.randomUUID())
                 .nombre("Juan")
                 .email(email)
-                .documento(DocumentoIdentidad.builder().valor("123456789").build())
+                .documento(documento)
                 .municipio(municipio)
                 .rol(Rol.VOTANTE)
                 .estado(EstadoUsuario.HABILITADO)
@@ -127,13 +129,13 @@ class RequestOtpUseCaseTest {
                 .estado(EstadoOtp.ACTIVO)
                 .build();
 
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(usuario));
+        when(usuarioRepository.findByDocumento(any(DocumentoIdentidad.class))).thenReturn(Mono.just(usuario));
         when(otpRepository.findByEmailAndEstado(any(Email.class), any(EstadoOtp.class))).thenReturn(Mono.just(otpPrevio));
         when(otpRepository.update(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(otpRepository.save(any(Otp.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(emailSender.enviarOtp(any(Email.class), any(String.class))).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.ejecutar(emailStr))
+        StepVerifier.create(useCase.ejecutar(documentoStr))
                 .assertNext(mensaje -> {
                     assert mensaje.contains("recibirás un código");
                 })

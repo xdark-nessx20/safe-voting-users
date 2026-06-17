@@ -24,4 +24,11 @@ public class GestorElectoralRepositoryAdapter implements GestorElectoralReposito
                         usuarioRepository.findById(usuarioId)
                                 .map(usuario -> mapper.toDomain(entity, usuario)));
     }
+
+    @Override
+    public Mono<GestorElectoral> save(GestorElectoral gestor) {
+        GestorElectoralEntity entity = mapper.toEntity(gestor);
+        return reactiveRepository.save(entity)
+                .map(savedEntity -> mapper.toDomain(savedEntity, gestor));
+    }
 }
