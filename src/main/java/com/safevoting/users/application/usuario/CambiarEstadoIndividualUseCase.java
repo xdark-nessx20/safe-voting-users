@@ -1,6 +1,8 @@
 package com.safevoting.users.application.usuario;
 
+import com.safevoting.users.domain.exception.usuario.AlcanceInsuficienteException;
 import com.safevoting.users.domain.exception.usuario.GestorNoModificableException;
+import com.safevoting.users.domain.exception.usuario.RolInvalidoException;
 import com.safevoting.users.domain.exception.usuario.UsuarioNoEncontradoException;
 import com.safevoting.users.domain.model.usuario.EstadoUsuario;
 import com.safevoting.users.domain.model.usuario.GestorElectoral;
@@ -30,7 +32,8 @@ public class CambiarEstadoIndividualUseCase {
                                 .flatMap(a -> ejecutarCambio(documento, documentoObjetivo, nuevoEstado, null))
                                 .switchIfEmpty(
                                         gestorElectoralRepository.findByUsuarioId(actorId)
-                                                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(actorId)))
+                                                .switchIfEmpty(Mono.error(new RolInvalidoException(
+                                                        "Solo los gestores electorales y administradores pueden realizar esta operación")))
                                                 .flatMap(gestor -> ejecutarCambio(documento, documentoObjetivo, nuevoEstado, gestor))
                                 ));
     }
@@ -42,7 +45,8 @@ public class CambiarEstadoIndividualUseCase {
                 .filter(objetivo -> gestor == null || !objetivo.esGestor())
                 .switchIfEmpty(Mono.error(new GestorNoModificableException()))
                 .filter(objetivo -> gestor == null || gestor.cubre(objetivo.getMunicipio()))
-                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documentoRaw)))
+                .switchIfEmpty(Mono.error(new AlcanceInsuficienteException(
+                        "El gestor no tiene jurisdicción sobre el municipio del usuario")))
                 .flatMap(objetivo -> {
                     aplicarEstado(objetivo, nuevoEstado);
                     objetivo.validateInfo();
