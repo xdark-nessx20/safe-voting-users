@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface GestorElectoralRepository {
 
     Mono<GestorElectoral> findByUsuarioId(UUID usuarioId);
+
+    Mono<GestorElectoral> save(GestorElectoral gestor);
 }

@@ -1,5 +1,6 @@
 package com.safevoting.users.infrastructure.config;
 
+import com.safevoting.users.application.auth.AsignarGestorUseCase;
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
 import com.safevoting.users.application.auth.VerifyOtpUseCase;
@@ -46,6 +47,13 @@ public class BeanConfiguration {
             OtpRepository otpRepository,
             TokenService tokenService) {
         return new VerifyOtpUseCase(usuarioRepository, otpRepository, tokenService);
+    }
+
+    @Bean
+    public AsignarGestorUseCase asignarGestorUseCase(
+            UsuarioRepository usuarioRepository,
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new AsignarGestorUseCase(usuarioRepository, gestorElectoralRepository);
     }
 
     @Bean

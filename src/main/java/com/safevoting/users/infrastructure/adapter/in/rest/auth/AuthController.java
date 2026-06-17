@@ -38,14 +38,14 @@ public class AuthController {
     @PostMapping("/login/request-otp")
     @Operation(summary = "Solicitar código OTP de autenticación")
     public Mono<ResponseEntity<MessageResponse>> solicitarOtp(@Valid @RequestBody OtpRequest request) {
-        return requestOtpUseCase.ejecutar(request.email())
+        return requestOtpUseCase.ejecutar(request.documento())
                 .map(mensaje -> ResponseEntity.ok(new MessageResponse(mensaje)));
     }
 
     @PostMapping("/login/verify-otp")
     @Operation(summary = "Verificar código OTP y obtener token de sesión")
     public Mono<ResponseEntity<AuthResponse>> verificarOtp(@Valid @RequestBody OtpVerifyRequest request) {
-        return verifyOtpUseCase.ejecutar(request.email(), request.codigo())
+        return verifyOtpUseCase.ejecutar(request.documento(), request.codigo())
                 .map(result -> ResponseEntity.ok(new AuthResponse(result.token(), result.email(), result.rol())));
     }
 }

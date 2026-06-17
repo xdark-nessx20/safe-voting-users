@@ -3,6 +3,7 @@ package com.safevoting.users.application.auth;
 import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
 import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
 import com.safevoting.users.domain.exception.otp.ReintentosExcedidosException;
+import com.safevoting.users.domain.exception.usuario.UsuarioNoEncontradoException;
 import com.safevoting.users.domain.exception.usuario.UsuarioNoHabilitadoException;
 import com.safevoting.users.domain.model.otp.EstadoOtp;
 import com.safevoting.users.domain.model.otp.Otp;
@@ -10,6 +11,7 @@ import com.safevoting.users.domain.model.usuario.Usuario;
 import com.safevoting.users.domain.repository.OtpRepository;
 import com.safevoting.users.domain.repository.TokenService;
 import com.safevoting.users.domain.repository.UsuarioRepository;
+import com.safevoting.users.domain.shared.DocumentoIdentidad;
 import com.safevoting.users.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -21,21 +23,26 @@ public class VerifyOtpUseCase {
     private final OtpRepository otpRepository;
     private final TokenService tokenService;
 
-    public Mono<AuthResult> ejecutar(String emailStr, String codigo) {
-        Email email = Email.builder().valor(emailStr).build();
+    public Mono<AuthResult> ejecutar(String documentoStr, String codigo) {
+        DocumentoIdentidad documento = DocumentoIdentidad.builder().valor(documentoStr).build();
 
-        return otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)
-                .switchIfEmpty(Mono.error(new OtpInvalidoException()))
-                .filter(Otp::esValido)
-                .switchIfEmpty(Mono.error(new OtpExpiradoException()))
-                .flatMap(otp -> procesarCodigo(otp, codigo, email));
+        return usuarioRepository.findByDocumento(documento)
+                .switchIfEmpty(Mono.error(new UsuarioNoEncontradoException(documentoStr)))
+                .flatMap(usuario -> {
+                    Email email = usuario.getEmail();
+                    return otpRepository.findByEmailAndEstado(email, EstadoOtp.ACTIVO)
+                            .switchIfEmpty(Mono.error(new OtpInvalidoException()))
+                            .filter(Otp::esValido)
+                            .switchIfEmpty(Mono.error(new OtpExpiradoException()))
+                            .flatMap(otp -> procesarCodigo(otp, codigo, usuario));
+                });
     }
 
-    private Mono<AuthResult> procesarCodigo(Otp otp, String codigo, Email email) {
+    private Mono<AuthResult> procesarCodigo(Otp otp, String codigo, Usuario usuario) {
         return Mono.just(otp)
                 .flatMap(o -> decidirRama(o, codigo))
                 .flatMap(otpRepository::update)
-                .then(Mono.defer(() -> usuarioRepository.findByEmail(email)))
+                .then(Mono.just(usuario))
                 .filter(Usuario::esHabilitado)
                 .switchIfEmpty(Mono.error(new UsuarioNoHabilitadoException()))
                 .map(this::construirAuthResult);

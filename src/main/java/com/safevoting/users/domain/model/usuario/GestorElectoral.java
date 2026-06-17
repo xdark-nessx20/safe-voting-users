@@ -19,6 +19,21 @@ public class GestorElectoral extends Usuario {
 
     private AlcanceOperacion alcance;
 
+    public static GestorElectoral fromUsuario(Usuario usuario, AlcanceOperacion alcance) {
+        return GestorElectoral.builder()
+                .id(usuario.getId())
+                .nombre(usuario.getNombre())
+                .email(usuario.getEmail())
+                .telefono(usuario.getTelefono())
+                .documento(usuario.getDocumento())
+                .municipio(usuario.getMunicipio())
+                .rol(usuario.getRol())
+                .estado(usuario.getEstado())
+                .createdAt(usuario.getCreatedAt())
+                .alcance(alcance)
+                .build();
+    }
+
     public void validateInfo() {
         super.validateInfo();
         if (!esGestor()) {
@@ -36,19 +51,27 @@ public class GestorElectoral extends Usuario {
     public void validarAlcance(Municipio municipioObjetivo) {
         if (!cubre(municipioObjetivo)) {
             throw new AlcanceInsuficienteException(
-                    "El gestor con alcance " + alcance + " no tiene jurisdicción sobre el municipio objetivo");
+                    "El gestor con alcance %s no tiene jurisdicción sobre el municipio objetivo".formatted(alcance));
         }
     }
 
     public void validarAlcanceNoSuperado(AlcanceOperacion alcanceSolicitado) {
-        if (alcance == AlcanceOperacion.MUNICIPAL && alcanceSolicitado != AlcanceOperacion.MUNICIPAL) {
+        if (alcanceMunicipalSuperado(alcanceSolicitado)) {
             throw new AlcanceInsuficienteException(
                     "Un gestor con alcance MUNICIPAL solo puede realizar operaciones con alcance MUNICIPAL");
         }
-        if (alcance == AlcanceOperacion.DEPARTAMENTAL && alcanceSolicitado == AlcanceOperacion.NACIONAL) {
+        if (alcanceDepartamentalSuperado(alcanceSolicitado)) {
             throw new AlcanceInsuficienteException(
                     "Un gestor con alcance DEPARTAMENTAL no puede realizar operaciones con alcance NACIONAL");
         }
+    }
+
+    private boolean alcanceMunicipalSuperado(AlcanceOperacion alcanceSolicitado){
+        return alcance == AlcanceOperacion.MUNICIPAL && alcanceSolicitado != AlcanceOperacion.MUNICIPAL;
+    }
+
+    private boolean alcanceDepartamentalSuperado(AlcanceOperacion alcanceSolicitado){
+        return alcance == AlcanceOperacion.DEPARTAMENTAL && alcanceSolicitado == AlcanceOperacion.NACIONAL;
     }
 
     public static void validarNoEsGestor(Usuario objetivo) {
