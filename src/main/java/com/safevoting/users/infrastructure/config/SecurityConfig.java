@@ -27,7 +27,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/auth/**").permitAll()
                         .pathMatchers("/api/v1/admin/**").hasRole("GESTOR_ELECTORAL")
                         .pathMatchers("/api/v1/users/inscripcion/**").authenticated()
-                        .pathMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/webjars/**", "/v3/api-docs/**").permitAll()
                         .pathMatchers("/actuator/health").permitAll()
                         .anyExchange().authenticated()
                 )

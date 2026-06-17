@@ -1,34 +1,30 @@
 spring:
   application:
     name: users
-  profiles:
-    active: dev
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/safevoting_users
-    username: safevoting
-    password: safevoting_dev
+    url: r2dbc:postgresql://${DB_HOST:localhost}:5432/safevoting_users
+    username: ${DB_USER:safevoting}
+    password: ${DB_PASS:safevoting_dev}
   flyway:
     enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/safevoting_users
+    user: ${DB_USER:safevoting}
+    password: ${DB_PASS:safevoting_dev}
     locations: classpath:db/migration
   mail:
-    host: localhost
-    port: 1025
-    username:
-    password:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
     properties:
       mail:
         smtp:
           auth: false
           starttls:
             enable: false
-  webflux:
-    base-path: /api/v1
 
 springdoc:
-  api-docs:
-    path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    enabled: true
+  api-docs:
     enabled: true
 
 jwt:

@@ -1,0 +1,15 @@
+build/
+.gradle/
+*.class
+*.jar
+*.log
+.idea/
+*.iml
+bin/
+out/
+src/test/
+docker-compose.yml
+Dockerfile
+.git/
+.gitignore
+*.md
