@@ -17,8 +17,8 @@ public class MunicipioRepositoryAdapter implements MunicipioRepository {
     private static final String SELECT_JOIN = """
             SELECT m.id, m.nombre, m.departamento_id,
                    d.id AS d_id, d.nombre AS d_nombre
-            FROM municipio m
-            JOIN departamento d ON m.departamento_id = d.id
+            FROM municipios m
+            JOIN departamentos d ON m.departamento_id = d.id
             """;
 
     private final MunicipioReactiveRepository reactiveRepository;

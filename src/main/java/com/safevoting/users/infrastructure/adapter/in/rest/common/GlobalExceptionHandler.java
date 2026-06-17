@@ -6,6 +6,7 @@ import com.safevoting.users.domain.exception.otp.OtpExpiradoException;
 import com.safevoting.users.domain.exception.otp.OtpInvalidoException;
 import com.safevoting.users.domain.exception.otp.ReintentosExcedidosException;
 import com.safevoting.users.domain.exception.otp.TransicionEstadoOtpInvalidaException;
+import com.safevoting.users.domain.exception.inscripcion.*;
 import com.safevoting.users.domain.exception.usuario.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -119,6 +120,30 @@ public class GlobalExceptionHandler {
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Error de validación");
         var body = new ApiErrorResponse(422, "Entidad no Procesable", mensaje, "VALIDACION");
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(SolicitudDuplicadaException.class)
+    public ResponseEntity<ApiErrorResponse> handleSolicitudDuplicada(SolicitudDuplicadaException ex) {
+        var body = new ApiErrorResponse(409, "Conflicto", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(SolicitudYaProcesadaException.class)
+    public ResponseEntity<ApiErrorResponse> handleSolicitudYaProcesada(SolicitudYaProcesadaException ex) {
+        var body = new ApiErrorResponse(409, "Conflicto", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(MismoMunicipioException.class)
+    public ResponseEntity<ApiErrorResponse> handleMismoMunicipio(MismoMunicipioException ex) {
+        var body = new ApiErrorResponse(422, "Entidad no Procesable", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(MotivoRequeridoException.class)
+    public ResponseEntity<ApiErrorResponse> handleMotivoRequerido(MotivoRequeridoException ex) {
+        var body = new ApiErrorResponse(422, "Entidad no Procesable", ex.getMessage(), ex.getErrorCode());
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 

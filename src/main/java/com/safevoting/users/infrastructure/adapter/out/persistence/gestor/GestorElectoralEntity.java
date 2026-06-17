@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("gestor_electoral")
+@Table("gestores_electorales")
 public class GestorElectoralEntity {
 
     @Id

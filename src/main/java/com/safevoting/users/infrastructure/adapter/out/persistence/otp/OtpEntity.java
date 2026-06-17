@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("otp")
+@Table("otps")
 public class OtpEntity {
 
     @Id

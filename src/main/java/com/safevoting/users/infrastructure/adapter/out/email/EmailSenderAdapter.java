@@ -20,14 +20,18 @@ public class EmailSenderAdapter implements EmailSender {
 
     @Override
     public Mono<Void> enviarOtp(Email email, String codigo) {
+        var text = """
+                Tu código de verificación es %s.
+                Este código expira en 5 minutos.
+                Si no solicitaste este código, reportalo ante soporte.
+                """.formatted(codigo);
+
         return Mono.fromRunnable(() -> {
             SimpleMailMessage mensaje = new SimpleMailMessage();
             mensaje.setFrom("noreply@safevoting.com");
             mensaje.setTo(email.getValor());
-            mensaje.setSubject("C\u00f3digo de verificaci\u00f3n Safe-Voting");
-            mensaje.setText("Tu c\u00f3digo de verificaci\u00f3n es: " + codigo + "\n\n"
-                    + "Este c\u00f3digo expira en 5 minutos.\n\n"
-                    + "Si no solicitaste este c\u00f3digo, ignora este mensaje.");
+            mensaje.setSubject("Código de verificación Safe-Voting");
+            mensaje.setText(text);
 
             try {
                 javaMailSender.send(mensaje);

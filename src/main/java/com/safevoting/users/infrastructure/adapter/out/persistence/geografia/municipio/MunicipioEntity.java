@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("municipio")
+@Table("municipios")
 public class MunicipioEntity {
 
     @Id

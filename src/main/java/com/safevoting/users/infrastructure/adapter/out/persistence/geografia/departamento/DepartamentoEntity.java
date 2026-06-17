@@ -13,7 +13,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("departamento")
+@Table("departamentos")
 public class DepartamentoEntity {
 
     @Id
