@@ -123,6 +123,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 
+    @ExceptionHandler(SolicitudNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleSolicitudNoEncontrada(SolicitudNotFoundException ex) {
+        var body = new ApiErrorResponse(404, "No Encontrado", ex.getMessage(), ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     @ExceptionHandler(SolicitudDuplicadaException.class)
     public ResponseEntity<ApiErrorResponse> handleSolicitudDuplicada(SolicitudDuplicadaException ex) {
         var body = new ApiErrorResponse(409, "Conflicto", ex.getMessage(), ex.getErrorCode());
