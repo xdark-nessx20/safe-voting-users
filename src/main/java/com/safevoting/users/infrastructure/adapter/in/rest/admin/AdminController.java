@@ -1,5 +1,6 @@
 package com.safevoting.users.infrastructure.adapter.in.rest.admin;
 
+import com.safevoting.users.application.auth.AsignarGestorCandidaturasUseCase;
 import com.safevoting.users.application.auth.AsignarGestorUseCase;
 import com.safevoting.users.application.usuario.BuscarUsuarioPorDocumentoUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
@@ -39,6 +40,7 @@ public class AdminController {
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final BuscarUsuarioPorDocumentoUseCase buscarUsuarioPorDocumentoUseCase;
     private final AsignarGestorUseCase asignarGestorUseCase;
+    private final AsignarGestorCandidaturasUseCase asignarGestorCandidaturasUseCase;
     private final UsuarioDtoMapper dtoMapper;
 
     @PatchMapping("/{documento}/estado")
@@ -107,12 +109,21 @@ public class AdminController {
                 .map(usuario -> ResponseEntity.ok(dtoMapper.toResponse(usuario)));
     }
 
-    @PostMapping("/gestores")
+    @PostMapping("/gestor-electoral")
     @Operation(summary = "Asignar rol de gestor electoral a un votante (solo ADMIN)")
-    public Mono<ResponseEntity<MessageResponse>> asignarGestor(@Valid @RequestBody AsignarGestorRequest request) {
+    public Mono<ResponseEntity<MessageResponse>> asignarGestorElectoral(@Valid @RequestBody AsignarGestorRequest request) {
         return asignarGestorUseCase.ejecutar(request.documento(), request.alcanceOperacion())
                 .map(g -> ResponseEntity.status(HttpStatus.OK)
                         .body(new MessageResponse("Gestor electoral asignado exitosamente")));
+    }
+
+    @PostMapping("/gestor-candidaturas")
+    @Operation(summary = "Asignar rol de gestor de candidaturas a un votante (solo ADMIN)")
+    public Mono<ResponseEntity<MessageResponse>> asignarGestorCandidaturas(
+            @Valid @RequestBody AsignarGestorCandidaturasRequest request) {
+        return asignarGestorCandidaturasUseCase.ejecutar(request.documento())
+                .map(u -> ResponseEntity.status(HttpStatus.OK)
+                        .body(new MessageResponse("Gestor de candidaturas asignado exitosamente")));
     }
 
     private Mono<UUID> usuarioIdAutenticado() {

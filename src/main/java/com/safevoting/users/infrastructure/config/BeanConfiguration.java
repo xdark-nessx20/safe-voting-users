@@ -1,5 +1,6 @@
 package com.safevoting.users.infrastructure.config;
 
+import com.safevoting.users.application.auth.AsignarGestorCandidaturasUseCase;
 import com.safevoting.users.application.auth.AsignarGestorUseCase;
 import com.safevoting.users.application.auth.RegisterVotanteUseCase;
 import com.safevoting.users.application.auth.RequestOtpUseCase;
@@ -13,6 +14,8 @@ import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorAlcanceUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorMunicipioUseCase;
 import com.safevoting.users.application.usuario.ListarUsuariosUseCase;
+import com.safevoting.users.application.usuario.ObtenerAlcanceGestorUseCase;
+import com.safevoting.users.application.usuario.ObtenerUsuarioPorIdUseCase;
 import com.safevoting.users.domain.repository.EmailSender;
 import com.safevoting.users.domain.repository.GestorElectoralRepository;
 import com.safevoting.users.domain.repository.MunicipioRepository;
@@ -54,6 +57,24 @@ public class BeanConfiguration {
             UsuarioRepository usuarioRepository,
             GestorElectoralRepository gestorElectoralRepository) {
         return new AsignarGestorUseCase(usuarioRepository, gestorElectoralRepository);
+    }
+
+    @Bean
+    public AsignarGestorCandidaturasUseCase asignarGestorCandidaturasUseCase(
+            UsuarioRepository usuarioRepository) {
+        return new AsignarGestorCandidaturasUseCase(usuarioRepository);
+    }
+
+    @Bean
+    public ObtenerUsuarioPorIdUseCase obtenerUsuarioPorIdUseCase(
+            UsuarioRepository usuarioRepository) {
+        return new ObtenerUsuarioPorIdUseCase(usuarioRepository);
+    }
+
+    @Bean
+    public ObtenerAlcanceGestorUseCase obtenerAlcanceGestorUseCase(
+            GestorElectoralRepository gestorElectoralRepository) {
+        return new ObtenerAlcanceGestorUseCase(gestorElectoralRepository);
     }
 
     @Bean

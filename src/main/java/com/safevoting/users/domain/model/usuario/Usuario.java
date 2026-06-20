@@ -62,6 +62,10 @@ public class Usuario {
         return Rol.GESTOR_ELECTORAL.equals(this.rol);
     }
 
+    public boolean esGestorCandidaturas() {
+        return Rol.GESTOR_CANDIDATURAS.equals(this.rol);
+    }
+
     public boolean esAdmin() {
         return Rol.ADMIN.equals(this.rol);
     }
@@ -70,9 +74,18 @@ public class Usuario {
         return Rol.VOTANTE.equals(this.rol);
     }
 
+    public boolean esGestorOAdmin() {
+        return esGestor() || esAdmin();
+    }
+
     public void asignarRolGestor() {
         validarEsVotante();
         this.rol = Rol.GESTOR_ELECTORAL;
+    }
+
+    public void asignarRolGestorCandidaturas() {
+        validarEsVotante();
+        this.rol = Rol.GESTOR_CANDIDATURAS;
     }
 
     private void validarEsVotante(){

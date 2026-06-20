@@ -1,5 +1,7 @@
 package com.safevoting.users.integration.rest.admin;
 
+import com.safevoting.users.application.auth.AsignarGestorCandidaturasUseCase;
+import com.safevoting.users.application.auth.AsignarGestorUseCase;
 import com.safevoting.users.application.usuario.BuscarUsuarioPorDocumentoUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoIndividualUseCase;
 import com.safevoting.users.application.usuario.CambiarEstadoMasivoPorAlcanceUseCase;
@@ -73,6 +75,12 @@ class AdminControllerIntegrationTest {
 
     @MockitoBean
     private BuscarUsuarioPorDocumentoUseCase buscarUsuarioPorDocumentoUseCase;
+
+    @MockitoBean
+    private AsignarGestorCandidaturasUseCase asignarGestorCandidaturasUseCase;
+
+    @MockitoBean
+    private AsignarGestorUseCase asignarGestorUseCase;
 
     @MockitoBean
     private UsuarioDtoMapper dtoMapper;
